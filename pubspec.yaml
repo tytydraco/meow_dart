@@ -1,0 +1,16 @@
+name: meow_dart
+description: A portable YouTube audio archiver.
+version: 1.0.0
+repository: https://github.com/tytydraco/meow_dart
+publish_to: 'none'
+
+environment:
+  sdk: '>=2.17.6 <3.0.0'
+
+dependencies:
+  path: ^1.8.2
+  youtube_explode_dart: ^1.12.0
+
+dev_dependencies:
+  test: ^1.16.0
+  very_good_analysis: any
