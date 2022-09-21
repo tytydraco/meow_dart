@@ -15,7 +15,8 @@ class Archiver {
   /// The [Files] to use.
   final Files files;
 
-  final _yt = YoutubeExplode();
+  /// The [YoutubeExplode] instance.
+  final yt = YoutubeExplode();
 
   String _getFormattedFileName(Video video, AudioStreamInfo audioStream) {
     final fileExtension = audioStream.container.name;
@@ -26,58 +27,37 @@ class Archiver {
   }
 
   Future<AudioStreamInfo> _getBestAudioStream(Video video) async {
-    final manifest = await _yt.videos.streamsClient.getManifest(video.id);
+    final manifest = await yt.videos.streamsClient.getManifest(video.id);
     return manifest.audioOnly.sortByBitrate().first;
   }
 
-  /// Returns true if we downloaded the audio, and false if we skipped it.
-  Future<bool> _archiveAudio(Video video) async {
+  /// Archive the best audio stream from a video.
+  Future<void> archiveAudio(Video video) async {
     final audioStream = await _getBestAudioStream(video);
+    final byteStream = yt.videos.streamsClient.get(audioStream);
     final fileName = _getFormattedFileName(video, audioStream);
     final file = File(join(files.directory.path, fileName));
 
+    stdout
+      ..writeln()
+      ..writeln('=== TRACK ===')
+      ..writeln('ID:\t${video.id.value}')
+      ..writeln('TITLE:\t${video.title}')
+      ..writeln('AUTHOR:\t${video.author}')
+      ..writeln()
+      ..write('>>> Downloading... ');
+
     // Check if we already have this one.
-    if (files.containsFile(file)) return false;
-
-    final byteStream = _yt.videos.streamsClient.get(audioStream);
-    files.addCachedFile(file);
-    await byteStream.pipe(file.openWrite());
-
-    return true;
-  }
-
-  Future<List<Video>> _getVideosFromPlaylist(String url) async {
-    final playlist = await _yt.playlists.get(url);
-    return _yt.playlists.getVideos(playlist.id).toList();
-  }
-
-  /// Downloads the highest quality audio from the given playlist URL, skipping
-  /// tracks that have already been downloaded.
-  Future<void> archivePlaylists(List<String> urls) async {
-    await files.scan();
-
-    final videos = <Video>{};
-    for (final url in urls) {
-      final videosPart = await _getVideosFromPlaylist(url);
-      videos.addAll(videosPart);
+    if (files.containsFile(file)) {
+      stdout.writeln('Skipped.');
+    } else {
+      files.addCachedFile(file);
+      await byteStream.pipe(file.openWrite());
+      stdout.writeln('Done.');
     }
 
-    for (final video in videos.toSet()) {
-      stdout
-        ..writeln()
-        ..writeln('=== TRACK ===')
-        ..writeln('ID:\t${video.id.value}')
-        ..writeln('TITLE:\t${video.title}')
-        ..writeln('AUTHOR:\t${video.author}')
-        ..writeln()
-        ..write('>>> Downloading... ');
-
-      final downloaded = await _archiveAudio(video);
-
-      stdout
-        ..writeln(downloaded ? 'Done.' : 'Skipped.')
-        ..writeln('=============')
-        ..writeln();
-    }
+    stdout
+      ..writeln('=============')
+      ..writeln();
   }
 }

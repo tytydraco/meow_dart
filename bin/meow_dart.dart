@@ -1,7 +1,6 @@
 import 'dart:io';
 
-import 'package:meow_dart/src/archiver.dart';
-import 'package:meow_dart/src/files.dart';
+import 'package:meow_dart/meow_dart.dart';
 
 Future<void> main(List<String> args) async {
   if (args.isEmpty) {
@@ -11,9 +10,7 @@ Future<void> main(List<String> args) async {
 
   try {
     final inputDirectory = Directory(args.first);
-    final io = Files(inputDirectory);
-    final urls = await io.getUrls();
-    await Archiver(io).archivePlaylists(urls);
+    await MeowDart(inputDirectory).archive();
   } catch (e) {
     stdout.writeln(e.toString());
     exit(1);
