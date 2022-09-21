@@ -16,6 +16,7 @@ Future<void> main(List<String> args) async {
   }
 
   final inputFiles = inputDirectory.listSync();
+  final inputFileNames = inputFiles.map((e) => basename(e.path));
   final urlFiles = inputFiles.where(
         (file) => basename(file.path) == '.url',
   );
@@ -36,11 +37,20 @@ Future<void> main(List<String> args) async {
     final audioStreams = manifest.audioOnly;
     final bestAudioStream = audioStreams
         .sortByBitrate()
-        .last;
+        .first;
     final byteStream = yt.videos.streamsClient.get(bestAudioStream);
 
     final fileExtension = bestAudioStream.container.name;
     final fileName = '${video.title} ~ ${video.id.value}.$fileExtension';
+
+    if (inputFileNames.contains(fileName)) {
+      stdout.writeln('Skipping ${video.title}');
+      continue;
+    }
+
     final outFile = File(join(inputDirectory.path, fileName));
+    
+    stdout.writeln(video.title);
+    await byteStream.pipe(outFile.openWrite());
   }
 }
