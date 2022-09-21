@@ -11,6 +11,7 @@ Future<void> main(List<String> args) async {
   try {
     final inputDirectory = Directory(args.first);
     await MeowDart(inputDirectory).archive();
+    stdout.writeln();
   } catch (e) {
     stdout.writeln(e.toString());
     exit(1);
