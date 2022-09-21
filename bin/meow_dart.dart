@@ -9,8 +9,13 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  final inputDirectory = Directory(args.first);
-  final io = Files(inputDirectory);
-  final urls = await io.getUrls();
-  await Archiver(io).archivePlaylists(urls);
+  try {
+    final inputDirectory = Directory(args.first);
+    final io = Files(inputDirectory);
+    final urls = await io.getUrls();
+    await Archiver(io).archivePlaylists(urls);
+  } catch (e) {
+    stdout.writeln(e.toString());
+    exit(1);
+  }
 }
