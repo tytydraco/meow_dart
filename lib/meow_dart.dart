@@ -30,8 +30,7 @@ class MeowDart {
       videos.addAll(videosPart);
     }
 
-    for (final video in videos) {
-      await _archiver.archiveAudio(video);
-    }
+    // Download in parallel.
+    await Future.wait(videos.map(_archiver.archiveAudio));
   }
 }
