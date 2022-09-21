@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:path/path.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:meow_dart/src/archiver.dart';
+import 'package:meow_dart/src/files.dart';
 
 Future<void> main(List<String> args) async {
   if (args.isEmpty) {
@@ -10,47 +10,7 @@ Future<void> main(List<String> args) async {
   }
 
   final inputDirectory = Directory(args.first);
-  if (!inputDirectory.existsSync()) {
-    stderr.writeln('Specified directory does not exist.');
-    exit(1);
-  }
-
-  final inputFiles = inputDirectory.listSync();
-  final inputFileNames = inputFiles.map((e) => basename(e.path));
-  final urlFiles = inputFiles.where(
-        (file) => basename(file.path) == '.url',
-  );
-  if (urlFiles.isEmpty) {
-    stderr.writeln('No .url file found in input directory.');
-    exit(1);
-  }
-
-  final urlFile = File(urlFiles.first.path);
-  final urls = urlFile.readAsLinesSync();
-
-  final yt = YoutubeExplode();
-  final playlist = await yt.playlists.get(urls.first);
-  final videos = yt.playlists.getVideos(playlist.id);
-
-  await for (final video in videos) {
-    final manifest = await yt.videos.streamsClient.getManifest(video.id);
-    final audioStreams = manifest.audioOnly;
-    final bestAudioStream = audioStreams
-        .sortByBitrate()
-        .first;
-    final byteStream = yt.videos.streamsClient.get(bestAudioStream);
-
-    final fileExtension = bestAudioStream.container.name;
-    final fileName = '${video.title} ~ ${video.id.value}.$fileExtension';
-
-    if (inputFileNames.contains(fileName)) {
-      stdout.writeln('Skipping ${video.title}');
-      continue;
-    }
-
-    final outFile = File(join(inputDirectory.path, fileName));
-    
-    stdout.writeln(video.title);
-    await byteStream.pipe(outFile.openWrite());
-  }
+  final io = Files(inputDirectory);
+  final urls = await io.getUrls();
+  await Archiver(io).archivePlaylists(urls);
 }
