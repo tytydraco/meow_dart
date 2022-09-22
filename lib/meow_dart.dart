@@ -61,8 +61,8 @@ class MeowDart {
           continue;
         }
 
-        // Download each file that we can.
-        await for (final video in videosStream) {
+        // Download each file that we can simultaneously.
+        unawaited(videosStream.forEach((video) async {
           final AudioStreamInfo audioStream;
           final Stream<List<int>> byteStream;
 
@@ -73,7 +73,7 @@ class MeowDart {
           } catch (_) {
             // Failed to fetch stream info.
             stdout.write('!');
-            continue;
+            return;
           }
 
           // Figure out where to put this file.
@@ -82,7 +82,7 @@ class MeowDart {
           // Check if we already have this one in case we can skip.
           if (file.existsSync()) {
             stdout.write('.');
-            continue;
+            return;
           }
 
           try {
@@ -92,11 +92,11 @@ class MeowDart {
             // Delete partial downloads.
             stdout.write('!');
             if (file.existsSync()) unawaited(file.delete());
-            continue;
+            return;
           }
 
           stdout.write('^');
-        }
+        }));
       }
     }
 
