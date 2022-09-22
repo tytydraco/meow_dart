@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:meow_dart/src/video_pair.dart';
 import 'package:path/path.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -21,7 +20,7 @@ class MeowDart {
     AudioStreamInfo audioStream,
   ) {
     final fileExtension = audioStream.container.name;
-    final path = '${video.title}'
+    final path = '${video.title.replaceAll('/', '')}'
         ' $fileNameIdSeparator '
         '${video.id.value}'
         '.$fileExtension';
@@ -33,14 +32,45 @@ class MeowDart {
     return manifest.audioOnly.sortByBitrate().first;
   }
 
+  Future<void> _archiveAudio(Directory urlDirectory, Video video) async {
+    // Get the stream metadata and byte stream.
+    final audioStream = await _getBestAudioStream(video);
+
+    final byteStream = _yt.videos.streamsClient.get(audioStream);
+
+    // Figure out where to put this file.
+    final file = _getFile(urlDirectory, video, audioStream);
+
+    // Check if we already have this one.
+    if (file.existsSync()) {
+      stdout.write('.');
+    } else {
+      await byteStream.pipe(file.openWrite());
+      stdout.write('^');
+    }
+  }
+
+  Future<void> _archiveUrl(Directory urlDirectory, String url) async {
+    final playlist = await _yt.playlists.get(url);
+    final videosStream = _yt.playlists.getVideos(playlist.id);
+
+    // Download each file that we can.
+    unawaited(
+      videosStream.forEach((video) async {
+        try {
+          await _archiveAudio(urlDirectory, video);
+        } catch (e) {
+          stdout.write('!');
+        }
+      }),
+    );
+  }
+
   /// Downloads the highest quality audio, skipping tracks that have already
   /// been downloaded.
   Future<void> archive(Directory directory) async {
     final files = directory.list(recursive: true);
     final urlFiles = files.where((file) => basename(file.path) == urlFileName);
-
-    // The map between videos and the parent directory for their file.
-    final videos = <VideoPair>[];
 
     // Get the URLs for all found URL files.
     await for (final urlFileSystemEntity in urlFiles) {
@@ -48,35 +78,9 @@ class MeowDart {
       final urlDirectory = urlFile.parent;
       final urls = await urlFile.readAsLines();
 
-      // Add the videos from the URLs to the map.
-      for (final url in urls) {
-        final playlist = await _yt.playlists.get(url);
-        final videosStream = _yt.playlists.getVideos(playlist.id);
-
-        await for (final part in videosStream) {
-          stdout.write('|');
-          videos.add(VideoPair(urlDirectory, part));
-        }
-      }
+      // Archive these tracks.
+      await Future.wait(urls.map((url) => _archiveUrl(urlDirectory, url)));
     }
-
-    stdout.write('\r');
-
-    await Future.wait(
-      videos.map((pair) async {
-        final audioStream = await _getBestAudioStream(pair.video);
-        final byteStream = _yt.videos.streamsClient.get(audioStream);
-        final file = _getFile(pair.directory, pair.video, audioStream);
-
-        // Check if we already have this one.
-        if (file.existsSync()) {
-          stdout.write('.');
-        } else {
-          await byteStream.pipe(file.openWrite());
-          stdout.write('^');
-        }
-      }),
-    );
 
     stdout.writeln();
   }

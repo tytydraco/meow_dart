@@ -27,7 +27,7 @@ Let Meow search recursively through a directory using the following command:
 Meow uses a unique logging schema in order to show you information about the download concisely.
 
 ```
-|           A track has been identified.
 .           A track has been skipped.
 ^           A track has been downloaded.
+!           A track cannot be fetched.
 ```
