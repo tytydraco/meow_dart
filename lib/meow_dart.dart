@@ -24,6 +24,7 @@ class MeowDart {
         ' $fileNameIdSeparator '
         '${video.id.value}'
         '.$fileExtension';
+
     return File(join(directory.path, path));
   }
 
@@ -32,43 +33,10 @@ class MeowDart {
     return manifest.audioOnly.sortByBitrate().first;
   }
 
-  Future<void> _archiveAudio(Directory urlDirectory, Video video) async {
-    // Get the stream metadata and byte stream.
-    final audioStream = await _getBestAudioStream(video);
-
-    final byteStream = _yt.videos.streamsClient.get(audioStream);
-
-    // Figure out where to put this file.
-    final file = _getFile(urlDirectory, video, audioStream);
-
-    // Check if we already have this one.
-    if (file.existsSync()) {
-      stdout.write('.');
-    } else {
-      await byteStream.pipe(file.openWrite());
-      stdout.write('^');
-    }
-  }
-
-  Future<void> _archiveUrl(Directory urlDirectory, String url) async {
-    final playlist = await _yt.playlists.get(url);
-    final videosStream = _yt.playlists.getVideos(playlist.id);
-
-    // Download each file that we can.
-    unawaited(
-      videosStream.forEach((video) async {
-        try {
-          await _archiveAudio(urlDirectory, video);
-        } catch (e) {
-          stdout.write('!');
-        }
-      }),
-    );
-  }
-
   /// Downloads the highest quality audio, skipping tracks that have already
   /// been downloaded.
   Future<void> archive(Directory directory) async {
+    // Search recursively for URL files.
     final files = directory.list(recursive: true);
     final urlFiles = files.where((file) => basename(file.path) == urlFileName);
 
@@ -80,10 +48,54 @@ class MeowDart {
 
       // Archive these tracks.
       for (final url in urls) {
+        final Playlist playlist;
+        final Stream<Video> videosStream;
+
         try {
-          unawaited(_archiveUrl(urlDirectory, url));
-        } catch (e) {
+          // Get the playlist information and contained videos.
+          playlist = await _yt.playlists.get(url);
+          videosStream = _yt.playlists.getVideos(playlist.id);
+        } catch (_) {
+          // Failed to fetch playlist information.
           stdout.write('?');
+          continue;
+        }
+
+        // Download each file that we can.
+        await for (final video in videosStream) {
+          final AudioStreamInfo audioStream;
+          final Stream<List<int>> byteStream;
+
+          try {
+            // Get the stream metadata and byte stream.
+            audioStream = await _getBestAudioStream(video);
+            byteStream = _yt.videos.streamsClient.get(audioStream);
+          } catch (_) {
+            // Failed to fetch stream info.
+            stdout.write('!');
+            continue;
+          }
+
+          // Figure out where to put this file.
+          final file = _getFile(urlDirectory, video, audioStream);
+
+          // Check if we already have this one in case we can skip.
+          if (file.existsSync()) {
+            stdout.write('.');
+            continue;
+          }
+
+          try {
+            // Pipe byte stream to file in parallel.
+            unawaited(byteStream.pipe(file.openWrite()));
+          } catch (_) {
+            // Delete partial downloads.
+            stdout.write('!');
+            if (file.existsSync()) unawaited(file.delete());
+            continue;
+          }
+
+          stdout.write('^');
         }
       }
     }
