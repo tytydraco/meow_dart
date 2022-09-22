@@ -69,11 +69,11 @@ class MeowDart {
     }
   }
 
-  Future<void> _downloadVideos(
+  Future<List<Future<void>>> _downloadVideos(
     Directory urlDirectory,
     Stream<Video> videosStreams,
   ) async {
-    await videosStreams.forEach((video) async {
+    final jobs = await videosStreams.map((video) async {
       final AudioStreamInfo audioStream;
       final Stream<List<int>> byteStream;
 
@@ -97,8 +97,10 @@ class MeowDart {
       }
 
       // Pipe byte stream to file in parallel.
-      unawaited(_downloadVideo(file, byteStream));
-    });
+      return _downloadVideo(file, byteStream);
+    }).toList();
+
+    return jobs;
   }
 
   /// Downloads the highest quality audio, skipping tracks that have already
@@ -108,19 +110,21 @@ class MeowDart {
     final files = directory.list(recursive: true);
 
     // Create a list of download jobs.
-    final jobs =
-        files.where((file) => basename(file.path) == urlFileName).map((file) {
+    final jobs = <Future<void>>[];
+    await files
+        .where((file) => basename(file.path) == urlFileName)
+        .forEach((file) async {
       // Get the URLs for all found URL files.
       final urlFile = File(file.path);
       final urlDirectory = urlFile.parent;
       final videosStreams = _getVideosStreams(urlFile);
 
       // Download each file that we can simultaneously.
-      return _downloadVideos(urlDirectory, videosStreams);
+      jobs.addAll(await _downloadVideos(urlDirectory, videosStreams));
     });
 
     // Start all the jobs at once and wait for them to finish.
-    await Future.wait(await jobs.toList());
+    await Future.wait(jobs);
 
     stdout.writeln();
   }
