@@ -79,7 +79,13 @@ class MeowDart {
       final urls = await urlFile.readAsLines();
 
       // Archive these tracks.
-      await Future.wait(urls.map((url) => _archiveUrl(urlDirectory, url)));
+      for (final url in urls) {
+        try {
+          unawaited(_archiveUrl(urlDirectory, url));
+        } catch (e) {
+          stdout.write('?');
+        }
+      }
     }
 
     stdout.writeln();

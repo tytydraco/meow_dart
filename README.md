@@ -30,4 +30,5 @@ Meow uses a unique logging schema in order to show you information about the dow
 .           A track has been skipped.
 ^           A track has been downloaded.
 !           A track cannot be fetched.
+?           A playlist cannot be fetched.
 ```
