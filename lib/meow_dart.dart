@@ -57,6 +57,18 @@ class MeowDart {
     yield* videosStreams.stream;
   }
 
+  Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
+    try {
+      // Download the stream data to a file.
+      await byteStream.pipe(file.openWrite());
+      stdout.write('^');
+    } catch (_) {
+      // Clean up after an error.
+      if (file.existsSync()) await file.delete();
+      stdout.write('!');
+    }
+  }
+
   Future<void> _downloadVideos(
     Directory urlDirectory,
     Stream<Video> videosStreams,
@@ -84,17 +96,8 @@ class MeowDart {
         return;
       }
 
-      try {
-        // Pipe byte stream to file in parallel.
-        unawaited(byteStream.pipe(file.openWrite()));
-      } catch (_) {
-        // Delete partial downloads.
-        stdout.write('!');
-        if (file.existsSync()) unawaited(file.delete());
-        return;
-      }
-
-      stdout.write('^');
+      // Pipe byte stream to file in parallel.
+      unawaited(_downloadVideo(file, byteStream));
     });
   }
 
