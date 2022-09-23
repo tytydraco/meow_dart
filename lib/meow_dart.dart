@@ -53,18 +53,14 @@ class MeowDart {
   }
 
   Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
-    final fileSink = file.openWrite();
-
     try {
       // Download the stream data to a file.
-      await byteStream.pipe(fileSink);
+      await byteStream.pipe(file.openWrite());
       stdout.write('^');
     } catch (_) {
       // Clean up after an error.
       if (file.existsSync()) await file.delete();
       stdout.write('!');
-    } finally {
-      await fileSink.close();
     }
   }
 
