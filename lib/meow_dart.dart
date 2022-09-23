@@ -63,7 +63,6 @@ class MeowDart {
   }
 
   Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
-    stdout.write('+');
     try {
       // Download the stream data to a file.
       await byteStream.pipe(file.openWrite());
