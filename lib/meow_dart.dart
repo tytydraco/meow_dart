@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:path/path.dart';
+import 'package:pool/pool.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// A portable YouTube audio archiver.
@@ -13,7 +14,11 @@ class MeowDart {
   /// The name of the URL file.
   static const urlFileName = '.url';
 
+  /// The maximum number of videos we can download in parallel.
+  static const maxParallel = 20;
+
   final _yt = YoutubeExplode();
+  final _pool = Pool(maxParallel);
 
   File _getFile(
     Directory directory,
@@ -58,6 +63,7 @@ class MeowDart {
   }
 
   Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
+    stdout.write('+');
     try {
       // Download the stream data to a file.
       await byteStream.pipe(file.openWrite());
@@ -96,8 +102,8 @@ class MeowDart {
         return;
       }
 
-      // Pipe byte stream to file in parallel.
-      unawaited(_downloadVideo(file, byteStream));
+      // Pipe byte stream to file in pooled parallel.
+      await _pool.withResource(() => _downloadVideo(file, byteStream));
     });
   }
 
