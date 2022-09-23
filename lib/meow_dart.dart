@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:async/async.dart';
 import 'package:path/path.dart';
-import 'package:pool/pool.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// A portable YouTube audio archiver.
@@ -14,11 +12,7 @@ class MeowDart {
   /// The name of the URL file.
   static const urlFileName = '.url';
 
-  /// The maximum number of videos we can download in parallel.
-  static const maxParallel = 20;
-
   final _yt = YoutubeExplode();
-  final _pool = Pool(maxParallel);
 
   File _getFile(
     Directory directory,
@@ -41,7 +35,6 @@ class MeowDart {
 
   Stream<Video> _getVideosStreams(File urlFile) async* {
     final urls = await urlFile.readAsLines();
-    final videosStreams = StreamGroup<Video>();
 
     // Get all of the video streams for this URL file.
     for (final url in urls) {
@@ -50,27 +43,28 @@ class MeowDart {
       try {
         // Get the playlist information and contained videos.
         playlist = await _yt.playlists.get(url);
-        final videosStream = _yt.playlists.getVideos(playlist.id);
-        await videosStreams.add(videosStream);
+        yield* _yt.playlists.getVideos(playlist.id);
       } catch (_) {
         // Failed to fetch playlist information.
         stdout.write('?');
         continue;
       }
     }
-
-    yield* videosStreams.stream;
   }
 
   Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
+    final fileSink = file.openWrite();
+
     try {
       // Download the stream data to a file.
-      await byteStream.pipe(file.openWrite());
+      await byteStream.pipe(fileSink);
       stdout.write('^');
     } catch (_) {
       // Clean up after an error.
       if (file.existsSync()) await file.delete();
       stdout.write('!');
+    } finally {
+      await fileSink.close();
     }
   }
 
@@ -78,7 +72,7 @@ class MeowDart {
     Directory urlDirectory,
     Stream<Video> videosStreams,
   ) async {
-    await videosStreams.forEach((video) async {
+    await for (final video in videosStreams) {
       final AudioStreamInfo audioStream;
       final Stream<List<int>> byteStream;
 
@@ -89,7 +83,7 @@ class MeowDart {
       } catch (_) {
         // Failed to fetch stream info.
         stdout.write('!');
-        return;
+        continue;
       }
 
       // Figure out where to put this file.
@@ -98,12 +92,12 @@ class MeowDart {
       // Check if we already have this one in case we can skip.
       if (file.existsSync()) {
         stdout.write('.');
-        return;
+        continue;
       }
 
       // Pipe byte stream to file in pooled parallel.
-      await _pool.withResource(() => _downloadVideo(file, byteStream));
-    });
+      await _downloadVideo(file, byteStream);
+    }
   }
 
   /// Downloads the highest quality audio, skipping tracks that have already
@@ -111,18 +105,18 @@ class MeowDart {
   Future<void> archive(Directory directory) async {
     // Search recursively for URL files.
     final files = directory.list(recursive: true);
-
-    // Create a list of download jobs.
-    await files
+    final urlFiles = await files
         .where((file) => basename(file.path) == urlFileName)
-        .forEach((file) async {
+        .toList();
+
+    for (final file in urlFiles) {
       // Get the URLs for all found URL files.
       final urlFile = File(file.path);
       final urlDirectory = urlFile.parent;
       final videosStreams = _getVideosStreams(urlFile);
 
       // Download each file that we can simultaneously.
-      unawaited(_downloadVideos(urlDirectory, videosStreams));
-    });
+      await _downloadVideos(urlDirectory, videosStreams);
+    }
   }
 }
