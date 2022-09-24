@@ -14,9 +14,11 @@ class MeowDart {
 
   final _yt = YoutubeExplode();
 
-  File _getFile(Directory directory,
-      Video video,
-      AudioStreamInfo audioStream,) {
+  File _getFile(
+    Directory directory,
+    Video video,
+    AudioStreamInfo audioStream,
+  ) {
     final fileExtension = audioStream.container.name;
     final path = '${video.title.replaceAll('/', '')}'
         ' $fileNameIdSeparator '
@@ -28,9 +30,7 @@ class MeowDart {
 
   Future<AudioStreamInfo> _getBestAudioStream(Video video) async {
     final manifest = await _yt.videos.streamsClient.getManifest(video.id);
-    return manifest.audioOnly
-        .sortByBitrate()
-        .first;
+    return manifest.audioOnly.sortByBitrate().first;
   }
 
   Stream<Video> _getVideosStream(String url) async* {
@@ -61,8 +61,10 @@ class MeowDart {
     }
   }
 
-  Future<void> _downloadVideos(Directory urlDirectory,
-      Stream<Video> videosStreams,) async {
+  Future<void> _downloadVideos(
+    Directory urlDirectory,
+    Stream<Video> videosStreams,
+  ) async {
     await for (final video in videosStreams) {
       final AudioStreamInfo audioStream;
       final Stream<List<int>> byteStream;
@@ -92,9 +94,12 @@ class MeowDart {
   }
 
   /// Searches recursively for URL files to download from.
-  Future<void> archiveDirectory(Directory directory) async {
+  Future<void> archiveDirectory(
+    Directory directory, {
+    bool recursive = true,
+  }) async {
     // Search recursively for URL files.
-    final files = directory.list(recursive: true);
+    final files = directory.list(recursive: recursive);
     final urlFiles = await files
         .where((file) => basename(file.path) == urlFileName)
         .toList();
@@ -118,5 +123,12 @@ class MeowDart {
   Future<void> archiveUrl(Directory directory, String url) async {
     final videosStream = _getVideosStream(url);
     await _downloadVideos(directory, videosStream);
+  }
+
+  /// Download multiple URLs to the specified directory.
+  Future<void> archiveUrls(Directory directory, List<String> urls) async {
+    for (final url in urls) {
+      await archiveUrl(directory, url);
+    }
   }
 }
