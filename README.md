@@ -18,9 +18,14 @@ Install the program using the following command:
 
 # Usage
 
-Let Meow search recursively through a directory using the following command:
-
-`meow_dart <DIRECTORY>`
+```
+dart bin/meow_dart.dart  -h
+-h, --help                     Shows the usage.
+-d, --directory (mandatory)    The directory to use. If no URL is specified, a file named '.url' should contain one or more URLs.
+-u, --url                      The URL to use instead of using a file. Multiple can be specified using a comma, or be specifying multiple URL options.
+-r, --[no-]recursive           Search directory recursively.
+                               (defaults to on)
+```
 
 # Log key
 
