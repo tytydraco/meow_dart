@@ -53,12 +53,15 @@ class MeowDart {
   }
 
   Future<void> _downloadVideo(File file, Stream<List<int>> byteStream) async {
+    final fileSink = file.openWrite();
+
     try {
       // Download the stream data to a file.
-      await byteStream.pipe(file.openWrite());
+      await byteStream.pipe(fileSink);
       stdout.write('^');
     } catch (_) {
       // Clean up after an error.
+      await fileSink.close();
       if (file.existsSync()) await file.delete();
       stdout.write('!');
     }
@@ -78,7 +81,7 @@ class MeowDart {
         byteStream = _yt.videos.streamsClient.get(audioStream);
       } catch (_) {
         // Failed to fetch stream info.
-        stdout.write('!');
+        stdout.write('?');
         continue;
       }
 
@@ -114,5 +117,7 @@ class MeowDart {
       // Download each file that we can simultaneously.
       await _downloadVideos(urlDirectory, videosStreams);
     }
+
+    stdout.writeln();
   }
 }
