@@ -14,7 +14,7 @@ Future<void> main(List<String> args) async {
       throw AssertionError('Directory does not exist.');
     }
 
-    await MeowDart().archive(inputDirectory);
+    await MeowDart().archiveDirectory(inputDirectory);
   } catch (e) {
     stdout.writeln(e.toString());
     exit(1);

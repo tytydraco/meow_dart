@@ -8,7 +8,7 @@ Meow will recursively search through a directory for files named `.url`. The URL
 YouTube or YouTube Music playlists, separated by a newline. Meow will download the highest quality audio-only stream
 available for the video to the directory its playlist URL was part of. Audio files are named with the YouTube ID
 appended at the end in order to avoid conflicts when downloading two tracks of the same name. If the file already
-exists, the download will be skipped. Downloads are done in parallel (20 tasks max).
+exists, the download will be skipped.
 
 # Getting started
 
