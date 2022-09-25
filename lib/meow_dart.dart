@@ -75,7 +75,7 @@ class MeowDart {
         byteStream = _yt.videos.streamsClient.get(audioStream);
       } catch (_) {
         // Failed to fetch stream info.
-        stdout.write('?');
+        stdout.write('!');
         continue;
       }
 
