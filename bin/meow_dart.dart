@@ -21,8 +21,8 @@ Future<void> main(List<String> args) async {
     ..addOption(
       'directory',
       abbr: 'd',
-      help: "The directory to use. If no URL is specified, a file named '.url' "
-          'should contain one or more URLs.',
+      help: 'The directory to use. If no URL is specified, a file named '
+          "'${MeowDart.urlFileName}' should contain one or more URLs.",
       mandatory: true,
     )
     ..addMultiOption(
