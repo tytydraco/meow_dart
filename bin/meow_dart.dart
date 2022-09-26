@@ -49,16 +49,13 @@ Future<void> main(List<String> args) async {
       throw AssertionError('Directory does not exist.');
     }
 
-    final meowDart = MeowDart();
+    final meowDart = MeowDart(inputDirectory);
 
     // If URL is not specified, search recursively. Otherwise, use the URL.
     if (urls.isEmpty) {
-      await meowDart.archiveDirectory(
-        inputDirectory,
-        recursive: recursive,
-      );
+      await meowDart.archiveDirectory(recursive: recursive);
     } else {
-      await meowDart.archiveUrls(inputDirectory, urls);
+      await meowDart.archiveUrls(urls);
     }
   } catch (e) {
     stdout.writeln(e.toString());

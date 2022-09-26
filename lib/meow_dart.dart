@@ -6,11 +6,17 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// A portable YouTube audio archiver.
 class MeowDart {
+  /// Creates a new [MeowDart] given a directory.
+  MeowDart(this.inputDirectory);
+
   /// The string used to separate the file name and the YouTube id.
   static const fileNameIdSeparator = '~';
 
   /// The name of the URL file.
   static const urlFileName = '.url';
+
+  /// The target input directory.
+  final Directory inputDirectory;
 
   final _yt = YoutubeExplode();
 
@@ -94,12 +100,9 @@ class MeowDart {
   }
 
   /// Searches recursively for URL files to download from.
-  Future<void> archiveDirectory(
-    Directory directory, {
-    bool recursive = true,
-  }) async {
+  Future<void> archiveDirectory({bool recursive = true}) async {
     // Search recursively for URL files.
-    final files = directory.list(recursive: recursive);
+    final files = inputDirectory.list(recursive: recursive);
     final urlFiles = await files
         .where((file) => basename(file.path) == urlFileName)
         .toList();
@@ -119,16 +122,11 @@ class MeowDart {
     stdout.writeln();
   }
 
-  /// Download a URL to the specified directory.
-  Future<void> archiveUrl(Directory directory, String url) async {
-    final videosStream = _getVideosStream(url);
-    await _downloadVideos(directory, videosStream);
-  }
-
   /// Download multiple URLs to the specified directory.
-  Future<void> archiveUrls(Directory directory, List<String> urls) async {
+  Future<void> archiveUrls(List<String> urls) async {
     for (final url in urls) {
-      await archiveUrl(directory, url);
+      final videosStream = _getVideosStream(url);
+      await _downloadVideos(inputDirectory, videosStream);
     }
   }
 }
