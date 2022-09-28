@@ -10,6 +10,7 @@ environment:
 dependencies:
   args: ^2.3.1
   path: ^1.8.2
+  pool: ^1.5.1
   stdlog:
     git: https://github.com/tytydraco/stdlog
   youtube_explode_dart: ^1.12.0

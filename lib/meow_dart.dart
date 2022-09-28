@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:meow_dart/src/downloader.dart';
 import 'package:path/path.dart';
+import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -19,20 +20,30 @@ class MeowDart {
   static const urlFileName = '.url';
 
   final _yt = YoutubeExplode();
+  final _pool = Pool(8);
 
   /// Spawn a new isolate to download this video.
   Future<void> _spawnDownloader(Video video, Directory directory) async {
+    final poolResource = await _pool.request();
+
+    final receivePort = RawReceivePort()
+      ..handler = (_) => poolResource.release();
+
     await Isolate.spawn(
-      (List<String> args) async {
-        final videoId = args[0];
-        final directoryPath = args[1];
+      (List<Object> args) async {
+        final sendPort = args[0] as SendPort;
+        final videoId = args[1] as String;
+        final directoryPath = args[2] as String;
+
         final downloader = Downloader(
           videoId: videoId,
           directoryPath: directoryPath,
         );
         await downloader.download();
+        sendPort.send(null);
       },
-      [video.id.value, directory.path],
+      [receivePort.sendPort, video.id.value, directory.path],
+      onError: receivePort.sendPort,
     );
   }
 
