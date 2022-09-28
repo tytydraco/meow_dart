@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:meow_dart/src/download_result.dart';
 import 'package:meow_dart/src/downloader.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
@@ -39,7 +40,22 @@ class MeowDart {
           videoId: videoId,
           directoryPath: directoryPath,
         );
-        await downloader.download();
+        final result = await downloader.download();
+        switch (result) {
+          case DownloadResult.badStream:
+            error('$videoId\tFailed to fetch the audio stream.');
+            break;
+          case DownloadResult.badWrite:
+            error('$videoId\tFailed to write the output content.');
+            break;
+          case DownloadResult.fileExists:
+            debug('$videoId\tAlready downloaded.');
+            break;
+          case DownloadResult.success:
+            info('$videoId\tDownloaded successfully.');
+            break;
+        }
+
         sendPort.send(null);
       },
       [receivePort.sendPort, video.id.value, directory.path],

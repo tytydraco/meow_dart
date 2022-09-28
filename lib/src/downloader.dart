@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:meow_dart/src/download_result.dart';
 import 'package:path/path.dart';
-import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality audio stream to a file.
@@ -60,7 +60,7 @@ class Downloader {
   }
 
   /// Downloads the audio track for the video.
-  Future<void> download() async {
+  Future<DownloadResult> download() async {
     final video = await _yt.videos.get(videoId);
 
     final AudioStreamInfo audioStream;
@@ -72,8 +72,7 @@ class Downloader {
       byteStream = _yt.videos.streamsClient.get(audioStream);
     } catch (_) {
       // Failed to fetch stream info.
-      error('$videoId\tFailed to fetch stream info.');
-      return;
+      return DownloadResult.badStream;
     }
 
     // Figure out where to put this file.
@@ -82,17 +81,12 @@ class Downloader {
     final file = File(filePath);
 
     // Check if we already have this one in case we can skip.
-    if (file.existsSync()) {
-      debug('$videoId\tAlready downloaded.');
-      return;
-    }
+    if (file.existsSync()) return DownloadResult.fileExists;
 
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);
-    if (wrote) {
-      info('$videoId\tDownloaded audio.');
-    } else {
-      error('$videoId\tFailed to download audio.');
-    }
+    if (!wrote) return DownloadResult.badWrite;
+
+    return DownloadResult.success;
   }
 }

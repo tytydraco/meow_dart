@@ -1,0 +1,16 @@
+import 'package:meow_dart/src/downloader.dart';
+
+/// The state of the [Downloader] result.
+enum DownloadResult {
+  /// Failed to fetch the stream info.
+  badStream,
+
+  /// Failed to pipe the audio stream to the file.
+  badWrite,
+
+  /// The file already exists.
+  fileExists,
+
+  /// The download finished successfully.
+  success,
+}
