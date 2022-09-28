@@ -274,6 +274,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.10.0"
+  stdlog:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "01ba9aa7b05d98459987ac5d9c666840ae018484"
+      url: "https://github.com/tytydraco/stdlog"
+    source: git
+    version: "1.0.4"
   stream_channel:
     dependency: transitive
     description:

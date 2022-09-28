@@ -51,7 +51,6 @@ Future<void> main(List<String> args) async {
 
     final meowDart = MeowDart(inputDirectory);
 
-    // If URL is not specified, search recursively. Otherwise, use the URL.
     if (urls.isEmpty) {
       await meowDart.archiveDirectory(recursive: recursive);
     } else {
