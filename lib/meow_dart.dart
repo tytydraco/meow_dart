@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:path/path.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -17,6 +18,7 @@ class MeowDart {
   static const urlFileName = '.url';
 
   final _yt = YoutubeExplode();
+  final _downloaderSpawner = DownloaderSpawner();
 
   /// Returns a stream of videos from the playlist URL.
   Stream<Video> _getVideosFromPlaylist(String url) async* {
@@ -50,7 +52,7 @@ class MeowDart {
       for (final url in urls) {
         final videosStream = _getVideosFromPlaylist(url);
         await for (final video in videosStream) {
-          await _spawnDownloader(video, urlDirectory);
+          await _downloaderSpawner.spawnDownloader(video, urlDirectory);
         }
       }
     }
@@ -61,7 +63,7 @@ class MeowDart {
     for (final url in urls) {
       final videosStream = _getVideosFromPlaylist(url);
       await for (final video in videosStream) {
-        await _spawnDownloader(video, inputDirectory);
+        await _downloaderSpawner.spawnDownloader(video, inputDirectory);
       }
     }
   }

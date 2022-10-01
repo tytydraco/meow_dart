@@ -7,9 +7,12 @@ import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+/// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
+  /// Resource pool that specifies the maximum number of concurrent downloads.
   final _pool = Pool(8);
 
+  /// Output the result of the download.
   void _handleResult(String videoId, DownloadResult result) {
     switch (result) {
       case DownloadResult.badStream:
@@ -27,6 +30,7 @@ class DownloaderSpawner {
     }
   }
 
+  /// Creates a new isolate for the downloader task.
   static Future<void> _isolateTask(List<Object> args) async {
     final sendPort = args[0] as SendPort;
     final videoId = args[1] as String;
@@ -34,7 +38,7 @@ class DownloaderSpawner {
 
     final downloader = Downloader(
       videoId: videoId,
-      directoryPath: directoryPath,
+      directory: Directory(directoryPath),
     );
 
     final result = await downloader.download();
@@ -42,19 +46,24 @@ class DownloaderSpawner {
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> _spawnDownloader(Video video, Directory directory) async {
+  Future<void> spawnDownloader(Video video, Directory directory) async {
+    final videoId = video.id.value;
+
+    // Grab a resource.
     final poolResource = await _pool.request();
 
-    final receivePort = RawReceivePort()
-      ..handler = (result) {
-        // TODO(tytydraco): handle result here _handleResult
+    // When the isolate task finishes, output the result and release the
+    // resource.
+    final resultPort = RawReceivePort()
+      ..handler = (DownloadResult result) {
+        _handleResult(videoId, result);
         poolResource.release();
       };
 
+    // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [receivePort.sendPort, video.id.value, directory.path],
-      onError: receivePort.sendPort,
+      [resultPort.sendPort, videoId, directory.path],
     );
   }
 }

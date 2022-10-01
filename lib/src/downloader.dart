@@ -9,17 +9,17 @@ class Downloader {
   /// Creates a new [Downloader] given a [videoId].
   Downloader({
     required this.videoId,
-    required this.directoryPath,
+    required this.directory,
   });
 
   /// The YouTube video ID to use.
   final String videoId;
 
-  /// The path of the directory to place the video in.
-  final String directoryPath;
+  /// The directory to place the video in.
+  final Directory directory;
 
   /// The string used to separate the file name and the YouTube id.
-  static const fileNameIdSeparator = '~';
+  static const fileNameIdSeparator = ' ~ ';
 
   final _yt = YoutubeExplode();
 
@@ -30,7 +30,7 @@ class Downloader {
   ) {
     final fileExtension = audioStream.container.name;
     final name = '${video.title.replaceAll('/', '')}'
-        ' $fileNameIdSeparator '
+        '$fileNameIdSeparator'
         '${video.id.value}'
         '.$fileExtension';
 
@@ -59,8 +59,22 @@ class Downloader {
     }
   }
 
+  /// Check if a file with the same video ID already exists.
+  Future<bool> _videoAlreadyDownloaded() async {
+    return directory
+        .list()
+        .map(
+          (file) => basenameWithoutExtension(file.path),
+        )
+        .map((name) => name.split(fileNameIdSeparator).last)
+        .any((id) => id == videoId);
+  }
+
   /// Downloads the audio track for the video.
   Future<DownloadResult> download() async {
+    // Check if we already have this one in case we can skip.
+    if (await _videoAlreadyDownloaded()) return DownloadResult.fileExists;
+
     final video = await _yt.videos.get(videoId);
 
     final AudioStreamInfo audioStream;
@@ -77,11 +91,8 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-        join(directoryPath, _getFileNameForAudio(video, audioStream));
+        join(directory.path, _getFileNameForAudio(video, audioStream));
     final file = File(filePath);
-
-    // Check if we already have this one in case we can skip.
-    if (file.existsSync()) return DownloadResult.fileExists;
 
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);
