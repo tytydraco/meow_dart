@@ -42,6 +42,14 @@ Future<void> main(List<String> args) async {
       abbr: 'm',
       help: 'The maximum number of concurrent downloads to do at once.',
       defaultsTo: '8',
+    )
+    ..addOption(
+      'command',
+      abbr: 'c',
+      help: 'A command to run after a download has been completed. The '
+          'downloaded file path will be passed to the command as an argument. '
+          "The command's working directory is the parent directory of the "
+          'downloaded file.',
     );
 
   try {
@@ -50,6 +58,7 @@ Future<void> main(List<String> args) async {
     final urls = results['url'] as List<String>;
     final recursive = results['recursive'] as bool;
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
+    final command = results['command'] as String?;
 
     final inputDirectory = Directory(directory);
     if (!inputDirectory.existsSync()) {
@@ -59,6 +68,7 @@ Future<void> main(List<String> args) async {
     final meowDart = MeowDart(
       inputDirectory,
       maxConcurrent: maxConcurrent,
+      command: command,
     );
 
     if (urls.isEmpty) {

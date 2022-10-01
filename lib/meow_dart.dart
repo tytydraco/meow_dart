@@ -12,6 +12,7 @@ class MeowDart {
   MeowDart(
     this.inputDirectory, {
     required this.maxConcurrent,
+    this.command,
   }) {
     _setupExitHandler();
   }
@@ -22,11 +23,17 @@ class MeowDart {
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
 
+  /// A command to run after a download has been completed.
+  final String? command;
+
   /// The name of the URL file.
   static const urlFileName = '.url';
 
   final _yt = YoutubeExplode();
-  late final _downloaderSpawner = DownloaderSpawner(maxConcurrent);
+  late final _downloaderSpawner = DownloaderSpawner(
+    maxConcurrent,
+    command: command,
+  );
 
   /// Stop all requests if there is an exit request.
   void _setupExitHandler() {

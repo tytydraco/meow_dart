@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:io/io.dart';
 import 'package:meow_dart/src/download_result.dart';
 import 'package:path/path.dart';
+import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality audio stream to a file.
@@ -10,6 +12,7 @@ class Downloader {
   Downloader({
     required this.videoId,
     required this.directory,
+    this.command,
   });
 
   /// The YouTube video ID to use.
@@ -17,6 +20,9 @@ class Downloader {
 
   /// The directory to place the video in.
   final Directory directory;
+
+  /// A command to run after each download has been completed.
+  final String? command;
 
   /// The string used to separate the file name and the YouTube id.
   static const fileNameIdSeparator = ' ~ ';
@@ -71,6 +77,24 @@ class Downloader {
         .any((id) => id == videoId);
   }
 
+  /// Run the command on the newly-downloaded file.
+  Future<void> _executeCommand(File file) async {
+    // Skip if no command was given.
+    if (command == null) return;
+
+    final parts = shellSplit(command!);
+    final result = await Process.run(
+      parts.first,
+      [...parts.sublist(1), file.path],
+      runInShell: true,
+      workingDirectory: file.parent.path,
+    );
+
+    if (result.exitCode != 0) {
+      warn('$videoId\tCommand exited with non-zero exit code.');
+    }
+  }
+
   /// Downloads the audio track for the video.
   Future<DownloadResult> download() async {
     // Check if we already have this one in case we can skip.
@@ -98,6 +122,9 @@ class Downloader {
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);
     if (!wrote) return DownloadResult.badWrite;
+
+    // Run the optional command.
+    await _executeCommand(file);
 
     return DownloadResult.success;
   }

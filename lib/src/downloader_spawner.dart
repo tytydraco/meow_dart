@@ -10,7 +10,10 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner(this.maxConcurrent) {
+  DownloaderSpawner(
+    this.maxConcurrent, {
+    this.command,
+  }) {
     if (maxConcurrent < 1) {
       throw ArgumentError('Must be a positive integer.', 'maxConcurrent');
     }
@@ -18,6 +21,9 @@ class DownloaderSpawner {
 
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
+
+  /// A command to run after each download has been completed.
+  final String? command;
 
   /// Resource pool that specifies the maximum number of concurrent downloads.
   late final _pool = Pool(maxConcurrent);
@@ -41,14 +47,16 @@ class DownloaderSpawner {
   }
 
   /// Creates a new isolate for the downloader task.
-  static Future<void> _isolateTask(List<Object> args) async {
-    final sendPort = args[0] as SendPort;
-    final videoId = args[1] as String;
-    final directoryPath = args[2] as String;
+  static Future<void> _isolateTask(List<Object?> args) async {
+    final sendPort = args[0]! as SendPort;
+    final videoId = args[1]! as String;
+    final directoryPath = args[2]! as String;
+    final command = args[3] as String?;
 
     final downloader = Downloader(
       videoId: videoId,
       directory: Directory(directoryPath),
+      command: command,
     );
 
     final result = await downloader.download();
@@ -81,7 +89,7 @@ class DownloaderSpawner {
     // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [resultPort.sendPort, videoId, directory.path],
+      [resultPort.sendPort, videoId, directory.path, command],
     );
   }
 }
