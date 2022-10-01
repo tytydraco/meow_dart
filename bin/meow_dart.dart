@@ -36,6 +36,12 @@ Future<void> main(List<String> args) async {
       abbr: 'r',
       help: 'Search directory recursively.',
       defaultsTo: true,
+    )
+    ..addOption(
+      'max-concurrent',
+      abbr: 'm',
+      help: 'The maximum number of concurrent downloads to do at once.',
+      defaultsTo: '8',
     );
 
   try {
@@ -43,15 +49,18 @@ Future<void> main(List<String> args) async {
     final directory = results['directory'] as String;
     final urls = results['url'] as List<String>;
     final recursive = results['recursive'] as bool;
+    final maxConcurrent = int.parse(results['max-concurrent'] as String);
 
     final inputDirectory = Directory(directory);
     if (!inputDirectory.existsSync()) {
       throw AssertionError('Directory does not exist.');
     }
 
-    final meowDart = MeowDart(inputDirectory);
+    final meowDart = MeowDart(
+      inputDirectory,
+      maxConcurrent: maxConcurrent,
+    );
 
-    // If URL is not specified, search recursively. Otherwise, use the URL.
     if (urls.isEmpty) {
       await meowDart.archiveDirectory(recursive: recursive);
     } else {
