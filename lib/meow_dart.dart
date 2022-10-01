@@ -12,7 +12,9 @@ class MeowDart {
   MeowDart(
     this.inputDirectory, {
     required this.maxConcurrent,
-  });
+  }) {
+    _setupExitHandler();
+  }
 
   /// The target input directory.
   final Directory inputDirectory;
@@ -25,6 +27,15 @@ class MeowDart {
 
   final _yt = YoutubeExplode();
   late final _downloaderSpawner = DownloaderSpawner(maxConcurrent);
+
+  /// Stop all requests if there is an exit request.
+  void _setupExitHandler() {
+    ProcessSignal.sigint.watch().listen((signal) async {
+      error('Halt! Waiting for current downloads to finish.');
+      await _downloaderSpawner.close();
+      exit(0);
+    });
+  }
 
   /// Returns a stream of videos from the playlist URL.
   Stream<Video> _getVideosFromPlaylist(String url) async* {

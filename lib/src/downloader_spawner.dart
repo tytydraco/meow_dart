@@ -55,8 +55,16 @@ class DownloaderSpawner {
     sendPort.send(result);
   }
 
+  /// Prevent any more downloads from being started.
+  Future<void> close() async {
+    await _pool.close();
+  }
+
   /// Spawn a new isolate to download this video.
   Future<void> spawnDownloader(Video video, Directory directory) async {
+    /// Skip the download if the pool has been closed.
+    if (_pool.isClosed) return;
+
     final videoId = video.id.value;
 
     // Grab a resource.
