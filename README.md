@@ -19,12 +19,14 @@ Install the program using the following command:
 # Usage
 
 ```
-dart bin/meow_dart.dart  -h
 -h, --help                     Shows the usage.
 -d, --directory (mandatory)    The directory to use. If no URL is specified, a file named '.url' should contain one or more URLs.
 -u, --url                      The URL to use instead of using a file. Multiple can be specified using a comma, or be specifying multiple URL options.
 -r, --[no-]recursive           Search directory recursively.
                                (defaults to on)
+-m, --max-concurrent           The maximum number of concurrent downloads to do at once.
+                               (defaults to "8")
+-c, --command                  A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument. The command's working directory is the parent directory of the downloaded file.
 ```
 
 # Log key
