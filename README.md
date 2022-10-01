@@ -28,14 +28,3 @@ Install the program using the following command:
                                (defaults to "8")
 -c, --command                  A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument. The command's working directory is the parent directory of the downloaded file.
 ```
-
-# Log key
-
-Meow uses a unique logging schema in order to show you information about the download concisely.
-
-```
-.           A track has been skipped.
-^           A track has been downloaded.
-!           A track cannot be fetched.
-?           A playlist cannot be fetched.
-```
