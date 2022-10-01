@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
+import 'package:stdlog/stdlog.dart';
 
 Future<void> main(List<String> args) async {
   final argParser = ArgParser();
@@ -31,12 +32,6 @@ Future<void> main(List<String> args) async {
       help: 'The URL to use instead of using a file. Multiple can be specified '
           'using a comma, or be specifying multiple URL options.',
     )
-    ..addFlag(
-      'recursive',
-      abbr: 'r',
-      help: 'Search directory recursively.',
-      defaultsTo: true,
-    )
     ..addOption(
       'max-concurrent',
       abbr: 'm',
@@ -56,25 +51,32 @@ Future<void> main(List<String> args) async {
     final results = argParser.parse(args);
     final directory = results['directory'] as String;
     final urls = results['url'] as List<String>;
-    final recursive = results['recursive'] as bool;
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
     final command = results['command'] as String?;
 
+    // Exit if a bad directory path was specified.
     final inputDirectory = Directory(directory);
     if (!inputDirectory.existsSync()) {
-      throw AssertionError('Directory does not exist.');
+      error('Directory does not exist.');
+      exit(1);
     }
 
+    // Exit if we have nothing to process.
+    if (urls.isEmpty) {
+      warn('No URLs specified');
+      exit(0);
+    }
+
+    // Setup our package.
     final meowDart = MeowDart(
       inputDirectory,
       maxConcurrent: maxConcurrent,
       command: command,
     );
 
-    if (urls.isEmpty) {
-      await meowDart.archiveDirectory(recursive: recursive);
-    } else {
-      await meowDart.archiveUrls(urls);
+    // Archive all URLs.
+    for (final url in urls) {
+      await meowDart.archivePlaylist(url);
     }
   } catch (e) {
     stdout.writeln(e.toString());
