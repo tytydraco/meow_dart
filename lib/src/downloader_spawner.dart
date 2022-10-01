@@ -61,6 +61,7 @@ class DownloaderSpawner {
 
     final result = await downloader.download();
     sendPort.send(result);
+    Isolate.exit();
   }
 
   /// Prevent any more downloads from being started.
@@ -78,18 +79,23 @@ class DownloaderSpawner {
     // Grab a resource.
     final poolResource = await _pool.request();
 
-    // When the isolate task finishes, output the result and release the
-    // resource.
-    final resultPort = RawReceivePort()
-      ..handler = (DownloadResult result) {
-        _handleResult(videoId, result);
-        poolResource.release();
-      };
+    // When the isolate task finishes, output the result if one exists and
+    // release the resource.
+    final port = ReceivePort();
+    port.listen((message) {
+      final result = message as DownloadResult?;
+      if (result != null) _handleResult(videoId, result);
+      poolResource.release();
+
+      // Do not allow any more incoming messages.
+      port.close();
+    });
 
     // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [resultPort.sendPort, videoId, directory.path, command],
+      [port.sendPort, videoId, directory.path, command],
+      onExit: port.sendPort,
     );
   }
 }

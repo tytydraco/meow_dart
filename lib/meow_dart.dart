@@ -13,9 +13,7 @@ class MeowDart {
     this.inputDirectory, {
     required this.maxConcurrent,
     this.command,
-  }) {
-    _setupExitHandler();
-  }
+  });
 
   /// The target input directory.
   final Directory inputDirectory;
@@ -29,6 +27,8 @@ class MeowDart {
   /// The name of the URL file.
   static const urlFileName = '.url';
 
+  late final _exitHandler =
+      ProcessSignal.sigint.watch().listen(_handleExitSignal);
   final _yt = YoutubeExplode();
   late final _downloaderSpawner = DownloaderSpawner(
     maxConcurrent,
@@ -36,12 +36,10 @@ class MeowDart {
   );
 
   /// Stop all requests if there is an exit request.
-  void _setupExitHandler() {
-    ProcessSignal.sigint.watch().listen((signal) async {
-      error('Halt! Waiting for current downloads to finish.');
-      await _downloaderSpawner.close();
-      exit(0);
-    });
+  Future<void> _handleExitSignal(ProcessSignal signal) async {
+    error('Halt! Waiting for current downloads to finish.');
+    await _downloaderSpawner.close();
+    exit(0);
   }
 
   /// Returns a stream of videos from the playlist URL.
@@ -80,6 +78,8 @@ class MeowDart {
         }
       }
     }
+
+    await _exitHandler.cancel();
   }
 
   /// Download multiple URLs to the specified directory.
@@ -90,5 +90,7 @@ class MeowDart {
         await _downloaderSpawner.spawnDownloader(video, inputDirectory);
       }
     }
+
+    await _exitHandler.cancel();
   }
 }
