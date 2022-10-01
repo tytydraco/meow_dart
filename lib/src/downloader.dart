@@ -21,7 +21,8 @@ class Downloader {
   /// The string used to separate the file name and the YouTube id.
   static const fileNameIdSeparator = ' ~ ';
 
-  final _yt = YoutubeExplode();
+  /// Lazily initialized YouTube download client.
+  late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
   String _getFileNameForAudio(
