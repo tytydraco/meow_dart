@@ -9,8 +9,18 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
+  /// Creates a new [DownloaderSpawner] with a given thread limit.
+  DownloaderSpawner(this.maxConcurrent) {
+    if (maxConcurrent < 1) {
+      throw ArgumentError('Must be a positive integer.', 'maxConcurrent');
+    }
+  }
+
+  /// The maximum number of concurrent downloads to do at once.
+  final int maxConcurrent;
+
   /// Resource pool that specifies the maximum number of concurrent downloads.
-  final _pool = Pool(8);
+  late final _pool = Pool(maxConcurrent);
 
   /// Output the result of the download.
   void _handleResult(String videoId, DownloadResult result) {

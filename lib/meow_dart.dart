@@ -9,16 +9,22 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// A portable YouTube audio archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
-  MeowDart(this.inputDirectory);
+  MeowDart(
+    this.inputDirectory, {
+    required this.maxConcurrent,
+  });
 
   /// The target input directory.
   final Directory inputDirectory;
+
+  /// The maximum number of concurrent downloads to do at once.
+  final int maxConcurrent;
 
   /// The name of the URL file.
   static const urlFileName = '.url';
 
   final _yt = YoutubeExplode();
-  final _downloaderSpawner = DownloaderSpawner();
+  late final _downloaderSpawner = DownloaderSpawner(maxConcurrent);
 
   /// Returns a stream of videos from the playlist URL.
   Stream<Video> _getVideosFromPlaylist(String url) async* {
