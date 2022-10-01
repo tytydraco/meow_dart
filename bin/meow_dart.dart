@@ -22,14 +22,13 @@ Future<void> main(List<String> args) async {
     ..addOption(
       'directory',
       abbr: 'd',
-      help: 'The directory to use. If no URL is specified, a file named '
-          "'${MeowDart.urlFileName}' should contain one or more URLs.",
+      help: 'The directory to download to.',
       mandatory: true,
     )
     ..addMultiOption(
       'url',
       abbr: 'u',
-      help: 'The URL to use instead of using a file. Multiple can be specified '
+      help: 'The YouTube playlist URL to download. Multiple can be specified '
           'using a comma, or be specifying multiple URL options.',
     )
     ..addOption(

@@ -23,9 +23,6 @@ class MeowDart {
   /// A command to run after a download has been completed.
   final String? command;
 
-  /// The name of the URL file.
-  static const urlFileName = '.url';
-
   /// The YouTube downloader instance used only to get playlist information.
   final _yt = YoutubeExplode();
 
