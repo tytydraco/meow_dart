@@ -24,7 +24,7 @@ Future<void> main(List<String> args) async {
       'directory',
       abbr: 'd',
       help: 'The directory to download to.',
-      mandatory: true,
+      defaultsTo: '.',
     )
     ..addMultiOption(
       'url',
