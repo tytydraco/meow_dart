@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:isolate';
 
-import 'package:meow_dart/src/download_result.dart';
 import 'package:meow_dart/src/downloader.dart';
+import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
@@ -34,18 +34,18 @@ class DownloaderSpawner {
   late final _pool = Pool(maxConcurrent);
 
   /// Output the result of the download.
-  void _handleResult(String videoId, DownloadResult result) {
+  void _handleResult(String videoId, DownloaderResult result) {
     switch (result) {
-      case DownloadResult.badStream:
+      case DownloaderResult.badStream:
         error('$videoId\tFailed to fetch the audio stream.');
         break;
-      case DownloadResult.badWrite:
+      case DownloaderResult.badWrite:
         error('$videoId\tFailed to write the output content.');
         break;
-      case DownloadResult.fileExists:
+      case DownloaderResult.fileExists:
         debug('$videoId\tAlready downloaded.');
         break;
-      case DownloadResult.success:
+      case DownloaderResult.success:
         info('$videoId\tDownloaded successfully.');
         break;
     }
@@ -90,7 +90,7 @@ class DownloaderSpawner {
     // release the resource.
     final port = ReceivePort();
     port.listen((message) {
-      final result = message as DownloadResult?;
+      final result = message as DownloaderResult?;
       if (result != null) _handleResult(videoId, result);
       poolResource.release();
 

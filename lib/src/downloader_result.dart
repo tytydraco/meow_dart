@@ -1,7 +1,7 @@
 import 'package:meow_dart/src/downloader.dart';
 
 /// The state of the [Downloader] result.
-enum DownloadResult {
+enum DownloaderResult {
   /// Failed to fetch the stream info.
   badStream,
 

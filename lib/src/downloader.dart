@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:io/io.dart';
-import 'package:meow_dart/src/download_result.dart';
+import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
 import 'package:stdlog/stdlog.dart';
@@ -110,9 +110,9 @@ class Downloader {
   }
 
   /// Downloads the video.
-  Future<DownloadResult> download() async {
+  Future<DownloaderResult> download() async {
     // Check if we already have this one in case we can skip.
-    if (await _videoAlreadyDownloaded()) return DownloadResult.fileExists;
+    if (await _videoAlreadyDownloaded()) return DownloaderResult.fileExists;
 
     final video = await _yt.videos.get(videoId);
 
@@ -125,7 +125,7 @@ class Downloader {
       byteStream = _yt.videos.streamsClient.get(streamInfo);
     } catch (_) {
       // Failed to fetch stream info.
-      return DownloadResult.badStream;
+      return DownloaderResult.badStream;
     }
 
     // Figure out where to put this file.
@@ -135,11 +135,11 @@ class Downloader {
 
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);
-    if (!wrote) return DownloadResult.badWrite;
+    if (!wrote) return DownloaderResult.badWrite;
 
     // Run the optional command.
     await _executeCommand(file);
 
-    return DownloadResult.success;
+    return DownloaderResult.success;
   }
 }
