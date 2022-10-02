@@ -46,23 +46,28 @@ class MeowDart {
     exit(0);
   }
 
-  /// Returns a stream of videos from the playlist URL.
-  Stream<Video> _getVideosFromPlaylist(String url) async* {
-    final Playlist playlist;
+  /// Download a video to the specified directory.
+  Future<void> archiveVideo(String url) async {
+    final video = await _yt.videos.get(url);
+    await _downloaderSpawner.spawnDownloader(
+      DownloaderConfig(
+        videoId: video.id.value,
+        directory: inputDirectory,
+        format: format,
+        command: command,
+      ),
+    );
 
-    try {
-      // Get the playlist information and contained videos.
-      playlist = await _yt.playlists.get(url);
-      yield* _yt.playlists.getVideos(playlist.id);
-    } catch (_) {
-      // Failed to fetch playlist information.
-      error('Unable to get playlist information: $url');
-    }
+    // Cancel the exit handler so we can exit gracefully.
+    await _exitHandler.cancel();
   }
 
   /// Download a playlist to the specified directory.
   Future<void> archivePlaylist(String url) async {
-    final videosStream = _getVideosFromPlaylist(url);
+    // Get the playlist information and contained videos.
+    final playlist = await _yt.playlists.get(url);
+    final videosStream = _yt.playlists.getVideos(playlist.id);
+
     await for (final video in videosStream) {
       await _downloaderSpawner.spawnDownloader(
         DownloaderConfig(

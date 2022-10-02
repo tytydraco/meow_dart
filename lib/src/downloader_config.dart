@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:meow_dart/src/format.dart';
-import 'package:meow_dart/src/mode.dart';
 
 /// The configuration for the download.
 class DownloaderConfig {
@@ -10,7 +9,6 @@ class DownloaderConfig {
     required this.videoId,
     required this.directory,
     this.format = Format.muxed,
-    this.mode = Mode.video,
     this.command,
   });
 
@@ -22,9 +20,6 @@ class DownloaderConfig {
 
   /// The download format type.
   final Format format;
-
-  /// The download mode.
-  final Mode mode;
 
   /// A command to run after each download has been completed.
   final String? command;

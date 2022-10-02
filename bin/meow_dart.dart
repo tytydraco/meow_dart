@@ -34,15 +34,9 @@ Future<void> main(List<String> args) async {
     )
     ..addOption(
       'max-concurrent',
-      abbr: 'm',
+      abbr: 'k',
       help: 'The maximum number of concurrent downloads to do at once.',
       defaultsTo: '8',
-    )
-    ..addOption(
-      'command',
-      abbr: 'c',
-      help: 'A command to run after a download has been completed. The '
-          'downloaded file path will be passed to the command as an argument.',
     )
     ..addOption(
       'format',
@@ -50,6 +44,19 @@ Future<void> main(List<String> args) async {
       help: 'The output format to use.',
       allowed: ['audio', 'video', 'muxed'],
       defaultsTo: 'muxed',
+    )
+    ..addOption(
+      'mode',
+      abbr: 'm',
+      help: 'The download mode for the URL.',
+      allowed: ['video', 'playlist'],
+      defaultsTo: 'video',
+    )
+    ..addOption(
+      'command',
+      abbr: 'c',
+      help: 'A command to run after a download has been completed. The '
+          'downloaded file path will be passed to the command as an argument.',
     );
 
   try {
@@ -59,6 +66,7 @@ Future<void> main(List<String> args) async {
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
     final command = results['command'] as String?;
     final formatStr = results['format'] as String;
+    final modeStr = results['mode'] as String;
 
     var format = Format.muxed;
     switch (formatStr) {
@@ -86,7 +94,7 @@ Future<void> main(List<String> args) async {
       exit(0);
     }
 
-    // Setup our package.
+    // Set up our package.
     final meowDart = MeowDart(
       inputDirectory,
       maxConcurrent: maxConcurrent,
@@ -95,8 +103,17 @@ Future<void> main(List<String> args) async {
     );
 
     // Archive all URLs.
-    for (final url in urls) {
-      await meowDart.archivePlaylist(url);
+    switch (modeStr) {
+      case 'video':
+        for (final url in urls) {
+          await meowDart.archiveVideo(url);
+        }
+        break;
+      case 'playlist':
+        for (final url in urls) {
+          await meowDart.archivePlaylist(url);
+        }
+        break;
     }
   } catch (e) {
     stdout.writeln(e.toString());
