@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
+import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
 
 Future<void> main(List<String> args) async {
@@ -44,6 +45,13 @@ Future<void> main(List<String> args) async {
           'downloaded file path will be passed to the command as an argument. '
           "The command's working directory is the parent directory of the "
           'downloaded file.',
+    )
+    ..addOption(
+      'format',
+      abbr: 'f',
+      help: 'The output format to use.',
+      allowed: ['audio', 'video', 'muxed'],
+      defaultsTo: 'muxed',
     );
 
   try {
@@ -52,6 +60,20 @@ Future<void> main(List<String> args) async {
     final urls = results['url'] as List<String>;
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
     final command = results['command'] as String?;
+    final formatStr = results['format'] as String;
+
+    var format = Format.muxed;
+    switch (formatStr) {
+      case 'audio':
+        format = Format.audio;
+        break;
+      case 'video':
+        format = Format.video;
+        break;
+      case 'muxed':
+        format = Format.muxed;
+        break;
+    }
 
     // Exit if a bad directory path was specified.
     final inputDirectory = Directory(directory);
@@ -70,6 +92,7 @@ Future<void> main(List<String> args) async {
     final meowDart = MeowDart(
       inputDirectory,
       maxConcurrent: maxConcurrent,
+      format: format,
       command: command,
     );
 

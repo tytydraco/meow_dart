@@ -5,7 +5,7 @@ enum DownloadResult {
   /// Failed to fetch the stream info.
   badStream,
 
-  /// Failed to pipe the audio stream to the file.
+  /// Failed to pipe the stream to the file.
   badWrite,
 
   /// The file already exists.

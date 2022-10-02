@@ -2,15 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:meow_dart/src/downloader_spawner.dart';
+import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-/// A portable YouTube audio archiver.
+/// A portable YouTube archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
   MeowDart(
     this.inputDirectory, {
     required this.maxConcurrent,
+    this.format = Format.muxed,
     this.command,
   });
 
@@ -19,6 +21,9 @@ class MeowDart {
 
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
+
+  /// The download format type.
+  final Format format;
 
   /// A command to run after a download has been completed.
   final String? command;
@@ -29,6 +34,7 @@ class MeowDart {
   /// The download spawner to handle threaded downloads.
   late final _downloaderSpawner = DownloaderSpawner(
     maxConcurrent,
+    format: format,
     command: command,
   );
 

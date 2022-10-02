@@ -1,5 +1,5 @@
 name: meow_dart
-description: A portable YouTube audio archiver.
+description: A portable YouTube archiver.
 version: 1.0.0
 repository: https://github.com/tytydraco/meow_dart
 publish_to: 'none'

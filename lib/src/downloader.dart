@@ -2,16 +2,18 @@ import 'dart:io';
 
 import 'package:io/io.dart';
 import 'package:meow_dart/src/download_result.dart';
+import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-/// Downloads the best-quality audio stream to a file.
+/// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a [videoId].
   Downloader({
     required this.videoId,
     required this.directory,
+    this.format = Format.video,
     this.command,
   });
 
@@ -20,6 +22,9 @@ class Downloader {
 
   /// The directory to place the video in.
   final Directory directory;
+
+  /// The download format type.
+  final Format format;
 
   /// A command to run after each download has been completed.
   final String? command;
@@ -31,11 +36,11 @@ class Downloader {
   late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
-  String _getFileNameForAudio(
+  String _getFileNameForStream(
     Video video,
-    AudioStreamInfo audioStream,
+    StreamInfo streamInfo,
   ) {
-    final fileExtension = audioStream.container.name;
+    final fileExtension = streamInfo.container.name;
     final name = '${video.title.replaceAll('/', '')}'
         '$fileNameIdSeparator'
         '${video.id.value}'
@@ -44,10 +49,18 @@ class Downloader {
     return name;
   }
 
-  /// Returns the highest quality audio stream.
-  Future<AudioStreamInfo> _getBestAudioStream() async {
+  /// Returns the highest quality stream.
+  Future<StreamInfo> _getBestStream() async {
     final manifest = await _yt.videos.streamsClient.getManifest(videoId);
-    return manifest.audioOnly.sortByBitrate().first;
+
+    switch (format) {
+      case Format.audio:
+        return manifest.audioOnly.sortByBitrate().first;
+      case Format.video:
+        return manifest.videoOnly.sortByVideoQuality().first;
+      case Format.muxed:
+        return manifest.muxed.sortByVideoQuality().first;
+    }
   }
 
   /// Writes the file out to the disk.
@@ -95,20 +108,20 @@ class Downloader {
     }
   }
 
-  /// Downloads the audio track for the video.
+  /// Downloads the video.
   Future<DownloadResult> download() async {
     // Check if we already have this one in case we can skip.
     if (await _videoAlreadyDownloaded()) return DownloadResult.fileExists;
 
     final video = await _yt.videos.get(videoId);
 
-    final AudioStreamInfo audioStream;
+    final StreamInfo streamInfo;
     final Stream<List<int>> byteStream;
 
     try {
       // Get the stream metadata and byte stream.
-      audioStream = await _getBestAudioStream();
-      byteStream = _yt.videos.streamsClient.get(audioStream);
+      streamInfo = await _getBestStream();
+      byteStream = _yt.videos.streamsClient.get(streamInfo);
     } catch (_) {
       // Failed to fetch stream info.
       return DownloadResult.badStream;
@@ -116,7 +129,7 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-        join(directory.path, _getFileNameForAudio(video, audioStream));
+        join(directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
 
     // Pipe byte stream to file.

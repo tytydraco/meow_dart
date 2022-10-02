@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:meow_dart/src/download_result.dart';
 import 'package:meow_dart/src/downloader.dart';
+import 'package:meow_dart/src/format.dart';
 import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -12,6 +13,7 @@ class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
   DownloaderSpawner(
     this.maxConcurrent, {
+    this.format = Format.muxed,
     this.command,
   }) {
     if (maxConcurrent < 1) {
@@ -21,6 +23,9 @@ class DownloaderSpawner {
 
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
+
+  /// The download format type.
+  final Format format;
 
   /// A command to run after each download has been completed.
   final String? command;
@@ -51,11 +56,13 @@ class DownloaderSpawner {
     final sendPort = args[0]! as SendPort;
     final videoId = args[1]! as String;
     final directoryPath = args[2]! as String;
-    final command = args[3] as String?;
+    final format = args[3]! as Format;
+    final command = args[4] as String?;
 
     final downloader = Downloader(
       videoId: videoId,
       directory: Directory(directoryPath),
+      format: format,
       command: command,
     );
 
@@ -94,7 +101,7 @@ class DownloaderSpawner {
     // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [port.sendPort, videoId, directory.path, command],
+      [port.sendPort, videoId, directory.path, format, command],
       onExit: port.sendPort,
     );
   }
