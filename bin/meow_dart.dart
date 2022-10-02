@@ -42,9 +42,7 @@ Future<void> main(List<String> args) async {
       'command',
       abbr: 'c',
       help: 'A command to run after a download has been completed. The '
-          'downloaded file path will be passed to the command as an argument. '
-          "The command's working directory is the parent directory of the "
-          'downloaded file.',
+          'downloaded file path will be passed to the command as an argument.',
     )
     ..addOption(
       'format',

@@ -96,14 +96,15 @@ class Downloader {
     if (command == null) return;
 
     final parts = shellSplit(command!);
-    final result = await Process.run(
+    final process = await Process.start(
       parts.first,
       [...parts.sublist(1), file.path],
       runInShell: true,
-      workingDirectory: file.parent.path,
+      mode: ProcessStartMode.inheritStdio,
     );
 
-    if (result.exitCode != 0) {
+    final exitCode = await process.exitCode;
+    if (exitCode != 0) {
       warn('$videoId\tCommand exited with non-zero exit code.');
     }
   }
