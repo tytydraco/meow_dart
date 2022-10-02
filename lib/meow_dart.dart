@@ -10,8 +10,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// A portable YouTube archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
-  MeowDart(
-    this.inputDirectory, {
+  MeowDart(this.inputDirectory, {
     required this.maxConcurrent,
     this.format = Format.muxed,
     this.command,
@@ -37,7 +36,7 @@ class MeowDart {
 
   /// A SIGINT handler to cancel additional downloads.
   late final _exitHandler =
-      ProcessSignal.sigint.watch().listen(_handleExitSignal);
+  ProcessSignal.sigint.watch().listen(_handleExitSignal);
 
   /// Stop all requests if there is an exit request.
   Future<void> _handleExitSignal(ProcessSignal signal) async {
@@ -57,9 +56,6 @@ class MeowDart {
         command: command,
       ),
     );
-
-    // Cancel the exit handler so we can exit gracefully.
-    await _exitHandler.cancel();
   }
 
   /// Download a playlist to the specified directory.
@@ -78,8 +74,8 @@ class MeowDart {
         ),
       );
     }
-
-    // Cancel the exit handler so we can exit gracefully.
-    await _exitHandler.cancel();
   }
+
+  /// Allow the program to end gracefully by releasing the exit handler.
+  Future<void> releaseExitHandler() => _exitHandler.cancel();
 }

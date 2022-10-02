@@ -115,6 +115,9 @@ Future<void> main(List<String> args) async {
         }
         break;
     }
+
+    /// Exit gracefully.
+    await meowDart.releaseExitHandler();
   } catch (e) {
     stdout.writeln(e.toString());
     exit(1);
