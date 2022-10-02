@@ -7,6 +7,8 @@ import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+export 'src/format.dart';
+
 /// A portable YouTube archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.

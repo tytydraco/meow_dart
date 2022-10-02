@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
-import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
 
 Future<void> main(List<String> args) async {
