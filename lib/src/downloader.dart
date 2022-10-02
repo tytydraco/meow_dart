@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:io/io.dart';
+import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
@@ -9,25 +10,11 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality stream to a file.
 class Downloader {
-  /// Creates a new [Downloader] given a [videoId].
-  Downloader({
-    required this.videoId,
-    required this.directory,
-    this.format = Format.video,
-    this.command,
-  });
+  /// Creates a new [Downloader] given a downloader config.
+  Downloader(this.config);
 
-  /// The YouTube video ID to use.
-  final String videoId;
-
-  /// The directory to place the video in.
-  final Directory directory;
-
-  /// The download format type.
-  final Format format;
-
-  /// A command to run after each download has been completed.
-  final String? command;
+  /// The downloader config to use.
+  final DownloaderConfig config;
 
   /// The string used to separate the file name and the YouTube id.
   static const fileNameIdSeparator = ' ~ ';
@@ -51,9 +38,9 @@ class Downloader {
 
   /// Returns the highest quality stream.
   Future<StreamInfo> _getBestStream() async {
-    final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+    final manifest = await _yt.videos.streamsClient.getManifest(config.videoId);
 
-    switch (format) {
+    switch (config.format) {
       case Format.audio:
         return manifest.audioOnly.sortByBitrate().first;
       case Format.video:
@@ -81,21 +68,21 @@ class Downloader {
 
   /// Check if a file with the same video ID already exists.
   Future<bool> _videoAlreadyDownloaded() async {
-    return directory
+    return config.directory
         .list()
         .map(
           (file) => basenameWithoutExtension(file.path),
         )
         .map((name) => name.split(fileNameIdSeparator).last)
-        .any((id) => id == videoId);
+        .any((id) => id == config.videoId);
   }
 
   /// Run the command on the newly-downloaded file.
   Future<void> _executeCommand(File file) async {
     // Skip if no command was given.
-    if (command == null) return;
+    if (config.command == null) return;
 
-    final parts = shellSplit(command!);
+    final parts = shellSplit(config.command!);
     final process = await Process.start(
       parts.first,
       [...parts.sublist(1), file.path],
@@ -105,7 +92,7 @@ class Downloader {
 
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      warn('$videoId\tCommand exited with non-zero exit code.');
+      warn('${config.videoId}\tCommand exited with non-zero exit code.');
     }
   }
 
@@ -114,7 +101,7 @@ class Downloader {
     // Check if we already have this one in case we can skip.
     if (await _videoAlreadyDownloaded()) return DownloaderResult.fileExists;
 
-    final video = await _yt.videos.get(videoId);
+    final video = await _yt.videos.get(config.videoId);
 
     final StreamInfo streamInfo;
     final Stream<List<int>> byteStream;
@@ -130,7 +117,7 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-        join(directory.path, _getFileNameForStream(video, streamInfo));
+        join(config.directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
 
     // Pipe byte stream to file.

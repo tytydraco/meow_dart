@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
@@ -32,11 +33,7 @@ class MeowDart {
   final _yt = YoutubeExplode();
 
   /// The download spawner to handle threaded downloads.
-  late final _downloaderSpawner = DownloaderSpawner(
-    maxConcurrent,
-    format: format,
-    command: command,
-  );
+  late final _downloaderSpawner = DownloaderSpawner();
 
   /// A SIGINT handler to cancel additional downloads.
   late final _exitHandler =
@@ -67,7 +64,14 @@ class MeowDart {
   Future<void> archivePlaylist(String url) async {
     final videosStream = _getVideosFromPlaylist(url);
     await for (final video in videosStream) {
-      await _downloaderSpawner.spawnDownloader(video, inputDirectory);
+      await _downloaderSpawner.spawnDownloader(
+        DownloaderConfig(
+          videoId: video.id.value,
+          directory: inputDirectory,
+          format: format,
+          command: command,
+        ),
+      );
     }
 
     // Cancel the exit handler so we can exit gracefully.

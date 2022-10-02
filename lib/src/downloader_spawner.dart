@@ -2,20 +2,16 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:meow_dart/src/downloader.dart';
+import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner(
-    this.maxConcurrent, {
-    this.format = Format.muxed,
-    this.command,
-  }) {
+  DownloaderSpawner({this.maxConcurrent = 8}) {
     if (maxConcurrent < 1) {
       throw ArgumentError('Must be a positive integer.', 'maxConcurrent');
     }
@@ -23,12 +19,6 @@ class DownloaderSpawner {
 
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
-
-  /// The download format type.
-  final Format format;
-
-  /// A command to run after each download has been completed.
-  final String? command;
 
   /// Resource pool that specifies the maximum number of concurrent downloads.
   late final _pool = Pool(maxConcurrent);
@@ -60,10 +50,12 @@ class DownloaderSpawner {
     final command = args[4] as String?;
 
     final downloader = Downloader(
-      videoId: videoId,
-      directory: Directory(directoryPath),
-      format: format,
-      command: command,
+      DownloaderConfig(
+        videoId: videoId,
+        directory: Directory(directoryPath),
+        format: format,
+        command: command,
+      ),
     );
 
     final result = await downloader.download();
@@ -77,11 +69,9 @@ class DownloaderSpawner {
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(Video video, Directory directory) async {
+  Future<void> spawnDownloader(DownloaderConfig config) async {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
-
-    final videoId = video.id.value;
 
     // Grab a resource.
     final poolResource = await _pool.request();
@@ -91,7 +81,7 @@ class DownloaderSpawner {
     final port = ReceivePort();
     port.listen((message) {
       final result = message as DownloaderResult?;
-      if (result != null) _handleResult(videoId, result);
+      if (result != null) _handleResult(config.videoId, result);
       poolResource.release();
 
       // Do not allow any more incoming messages.
@@ -101,7 +91,13 @@ class DownloaderSpawner {
     // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [port.sendPort, videoId, directory.path, format, command],
+      [
+        port.sendPort,
+        config.videoId,
+        config.directory.path,
+        config.format,
+        config.command,
+      ],
       onExit: port.sendPort,
     );
   }
