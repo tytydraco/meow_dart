@@ -29,8 +29,8 @@ Future<void> main(List<String> args) async {
     ..addMultiOption(
       'url',
       abbr: 'u',
-      help: 'The YouTube playlist URL to download. Multiple can be specified '
-          'using a comma, or be specifying multiple URL options.',
+      help: 'The YouTube URL to download. Multiple can be specified using a '
+          'comma, or be specifying multiple URL options.',
     )
     ..addOption(
       'max-concurrent',

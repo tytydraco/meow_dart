@@ -10,7 +10,8 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// A portable YouTube archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
-  MeowDart(this.inputDirectory, {
+  MeowDart(
+    this.inputDirectory, {
     required this.maxConcurrent,
     this.format = Format.muxed,
     this.command,
@@ -28,7 +29,7 @@ class MeowDart {
   /// A command to run after a download has been completed.
   final String? command;
 
-  /// The YouTube downloader instance used only to get playlist information.
+  /// The YouTube downloader instance used only to get metadata.
   final _yt = YoutubeExplode();
 
   /// The download spawner to handle threaded downloads.
@@ -36,7 +37,7 @@ class MeowDart {
 
   /// A SIGINT handler to cancel additional downloads.
   late final _exitHandler =
-  ProcessSignal.sigint.watch().listen(_handleExitSignal);
+      ProcessSignal.sigint.watch().listen(_handleExitSignal);
 
   /// Stop all requests if there is an exit request.
   Future<void> _handleExitSignal(ProcessSignal signal) async {
@@ -60,7 +61,6 @@ class MeowDart {
 
   /// Download a playlist to the specified directory.
   Future<void> archivePlaylist(String url) async {
-    // Get the playlist information and contained videos.
     final playlist = await _yt.playlists.get(url);
     final videosStream = _yt.playlists.getVideos(playlist.id);
 

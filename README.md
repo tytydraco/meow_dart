@@ -19,7 +19,7 @@ Install the program using the following command:
 -h, --help              Shows the usage.
 -d, --directory         The directory to download to.
                         (defaults to ".")
--u, --url               The YouTube playlist URL to download. Multiple can be specified using a comma, or be specifying multiple URL options.
+-u, --url               The YouTube URL to download. Multiple can be specified using a comma, or be specifying multiple URL options.
 -k, --max-concurrent    The maximum number of concurrent downloads to do at once.
                         (defaults to "8")
 -f, --format            The output format to use.
