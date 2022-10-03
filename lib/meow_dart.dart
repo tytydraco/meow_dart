@@ -37,8 +37,8 @@ class MeowDart {
   /// The download spawner to handle threaded downloads.
   late final _downloaderSpawner = DownloaderSpawner();
 
-  /// A SIGINT handler to cancel additional downloads.
-  late final _exitHandler =
+  /// Register a SIGINT handler to cancel additional downloads.
+  StreamSubscription<void> registerExitHandler() =>
       ProcessSignal.sigint.watch().listen(_handleExitSignal);
 
   /// Stop all requests if there is an exit request.
@@ -77,7 +77,4 @@ class MeowDart {
       );
     }
   }
-
-  /// Allow the program to end gracefully by releasing the exit handler.
-  Future<void> releaseExitHandler() => _exitHandler.cancel();
 }

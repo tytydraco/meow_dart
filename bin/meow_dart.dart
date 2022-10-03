@@ -101,6 +101,9 @@ Future<void> main(List<String> args) async {
       command: command,
     );
 
+    // Handle SIGINT gracefully.
+    final exitHandler = meowDart.registerExitHandler();
+
     // Archive all URLs.
     switch (modeStr) {
       case 'video':
@@ -116,7 +119,7 @@ Future<void> main(List<String> args) async {
     }
 
     /// Exit gracefully.
-    await meowDart.releaseExitHandler();
+    await exitHandler.cancel();
   } catch (e) {
     stdout.writeln(e.toString());
     exit(1);
