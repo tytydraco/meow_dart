@@ -6,14 +6,10 @@ import 'package:meow_dart/src/format.dart';
 class DownloaderConfig {
   /// Creates a new [DownloaderConfig].
   DownloaderConfig({
-    required this.videoId,
     required this.directory,
     this.format = Format.muxed,
     this.command,
   });
-
-  /// The YouTube video ID to use.
-  final String videoId;
 
   /// The directory to place the video in.
   final Directory directory;

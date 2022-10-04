@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
-import 'package:meow_dart/src/format.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -12,30 +11,19 @@ export 'src/format.dart';
 /// A portable YouTube archiver.
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
-  MeowDart(
-    this.inputDirectory, {
-    required this.maxConcurrent,
-    this.format = Format.muxed,
-    this.command,
+  MeowDart({
+    required this.config,
+    required this.spawner,
   });
 
-  /// The target input directory.
-  final Directory inputDirectory;
+  /// The downloader config to use.
+  final DownloaderConfig config;
 
-  /// The maximum number of concurrent downloads to do at once.
-  final int maxConcurrent;
-
-  /// The download format type.
-  final Format format;
-
-  /// A command to run after a download has been completed.
-  final String? command;
+  /// The downloader spawner to use.
+  final DownloaderSpawner spawner;
 
   /// The YouTube downloader instance used only to get metadata.
   final _yt = YoutubeExplode();
-
-  /// The download spawner to handle threaded downloads.
-  late final _downloaderSpawner = DownloaderSpawner();
 
   /// Register a SIGINT handler to cancel additional downloads.
   StreamSubscription<void> registerExitHandler() =>
@@ -44,26 +32,14 @@ class MeowDart {
   /// Stop all requests if there is an exit request.
   Future<void> _handleExitSignal(ProcessSignal signal) async {
     error('Halt! Waiting for current downloads to finish.');
-    await _downloaderSpawner.close();
+    await spawner.close();
     exit(0);
-  }
-
-  /// Spawns an Isolate to download a video.
-  Future<void> _archiveVideo(String videoId) async {
-    await _downloaderSpawner.spawnDownloader(
-      DownloaderConfig(
-        videoId: videoId,
-        directory: inputDirectory,
-        format: format,
-        command: command,
-      ),
-    );
   }
 
   /// Download a video to the specified directory.
   Future<void> archiveVideo(String url) async {
     final video = await _yt.videos.get(url);
-    await _archiveVideo(video.id.value);
+    await spawner.spawnDownloader(config, videoId: video.id.value);
   }
 
   /// Download a playlist to the specified directory.
@@ -72,7 +48,7 @@ class MeowDart {
     final videosStream = _yt.playlists.getVideos(playlist.id);
 
     await for (final video in videosStream) {
-      await _archiveVideo(video.id.value);
+      await spawner.spawnDownloader(config, videoId: video.id.value);
     }
   }
 }

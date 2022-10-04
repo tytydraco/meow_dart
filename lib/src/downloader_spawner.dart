@@ -11,7 +11,9 @@ import 'package:stdlog/stdlog.dart';
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner({this.maxConcurrent = 8}) {
+  DownloaderSpawner({
+    required this.maxConcurrent,
+  }) {
     if (maxConcurrent < 1) {
       throw ArgumentError('Must be a positive integer.', 'maxConcurrent');
     }
@@ -51,11 +53,11 @@ class DownloaderSpawner {
 
     final downloader = Downloader(
       DownloaderConfig(
-        videoId: videoId,
         directory: Directory(directoryPath),
         format: format,
         command: command,
       ),
+      videoId: videoId,
     );
 
     final result = await downloader.download();
@@ -69,7 +71,10 @@ class DownloaderSpawner {
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(DownloaderConfig config) async {
+  Future<void> spawnDownloader(
+    DownloaderConfig config, {
+    required String videoId,
+  }) async {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
 
@@ -81,7 +86,7 @@ class DownloaderSpawner {
     final port = ReceivePort();
     port.listen((message) {
       final result = message as DownloaderResult?;
-      if (result != null) _handleResult(config.videoId, result);
+      if (result != null) _handleResult(videoId, result);
       poolResource.release();
 
       // Do not allow any more incoming messages.
@@ -93,7 +98,7 @@ class DownloaderSpawner {
       _isolateTask,
       [
         port.sendPort,
-        config.videoId,
+        videoId,
         config.directory.path,
         config.format,
         config.command,

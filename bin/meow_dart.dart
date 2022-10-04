@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
+import 'package:meow_dart/src/downloader_config.dart';
+import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:stdlog/stdlog.dart';
 
 Future<void> main(List<String> args) async {
@@ -34,8 +36,9 @@ Future<void> main(List<String> args) async {
     ..addOption(
       'max-concurrent',
       abbr: 'k',
-      help: 'The maximum number of concurrent downloads to do at once.',
-      defaultsTo: '8',
+      help: 'The maximum number of concurrent downloads to do at once. By '
+          'default, it will be set to the number of CPU cores.',
+      defaultsTo: '${Platform.numberOfProcessors}',
     )
     ..addOption(
       'format',
@@ -93,13 +96,15 @@ Future<void> main(List<String> args) async {
       exit(0);
     }
 
-    // Set up our package.
-    final meowDart = MeowDart(
-      inputDirectory,
-      maxConcurrent: maxConcurrent,
+    /// Set up the downloader config we will be using.
+    final config = DownloaderConfig(
+      directory: inputDirectory,
       format: format,
       command: command,
     );
+
+    final spawner = DownloaderSpawner(maxConcurrent: maxConcurrent);
+    final meowDart = MeowDart(config: config, spawner: spawner);
 
     // Handle SIGINT gracefully.
     final exitHandler = meowDart.registerExitHandler();

@@ -11,10 +11,16 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a downloader config.
-  Downloader(this.config);
+  Downloader(
+    this.config, {
+    required this.videoId,
+  });
 
   /// The downloader config to use.
   final DownloaderConfig config;
+
+  /// The YouTube video ID to use.
+  final String videoId;
 
   /// The string used to separate the file name and the YouTube id.
   static const fileNameIdSeparator = ' ~ ';
@@ -38,8 +44,7 @@ class Downloader {
 
   /// Returns the highest quality stream.
   Future<StreamInfo> _getBestStream() async {
-    final manifest = await _yt.videos.streamsClient.getManifest(config.videoId);
-
+    final manifest = await _yt.videos.streamsClient.getManifest(videoId);
     switch (config.format) {
       case Format.audio:
         return manifest.audioOnly.sortByBitrate().first;
@@ -74,7 +79,7 @@ class Downloader {
           (file) => basenameWithoutExtension(file.path),
         )
         .map((name) => name.split(fileNameIdSeparator).last)
-        .any((id) => id == config.videoId);
+        .any((id) => id == videoId);
   }
 
   /// Run the command on the newly-downloaded file.
@@ -92,7 +97,7 @@ class Downloader {
 
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      warn('${config.videoId}\tCommand exited with non-zero exit code.');
+      warn('$videoId\tCommand exited with non-zero exit code.');
     }
   }
 
@@ -101,7 +106,7 @@ class Downloader {
     // Check if we already have this one in case we can skip.
     if (await _videoAlreadyDownloaded()) return DownloaderResult.fileExists;
 
-    final video = await _yt.videos.get(config.videoId);
+    final video = await _yt.videos.get(videoId);
 
     final StreamInfo streamInfo;
     final Stream<List<int>> byteStream;
