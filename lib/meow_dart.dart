@@ -48,17 +48,22 @@ class MeowDart {
     exit(0);
   }
 
-  /// Download a video to the specified directory.
-  Future<void> archiveVideo(String url) async {
-    final video = await _yt.videos.get(url);
+  /// Spawns an Isolate to download a video.
+  Future<void> _archiveVideo(String videoId) async {
     await _downloaderSpawner.spawnDownloader(
       DownloaderConfig(
-        videoId: video.id.value,
+        videoId: videoId,
         directory: inputDirectory,
         format: format,
         command: command,
       ),
     );
+  }
+
+  /// Download a video to the specified directory.
+  Future<void> archiveVideo(String url) async {
+    final video = await _yt.videos.get(url);
+    await _archiveVideo(video.id.value);
   }
 
   /// Download a playlist to the specified directory.
@@ -67,14 +72,7 @@ class MeowDart {
     final videosStream = _yt.playlists.getVideos(playlist.id);
 
     await for (final video in videosStream) {
-      await _downloaderSpawner.spawnDownloader(
-        DownloaderConfig(
-          videoId: video.id.value,
-          directory: inputDirectory,
-          format: format,
-          command: command,
-        ),
-      );
+      await _archiveVideo(video.id.value);
     }
   }
 }
