@@ -11,8 +11,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a downloader config.
-  Downloader(
-    this.config, {
+  Downloader(this.config, {
     required this.videoId,
   });
 
@@ -29,10 +28,8 @@ class Downloader {
   late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
-  String _getFileNameForStream(
-    Video video,
-    StreamInfo streamInfo,
-  ) {
+  String _getFileNameForStream(Video video,
+      StreamInfo streamInfo,) {
     final fileExtension = streamInfo.container.name;
     final name = '${video.title.replaceAll('/', '')}'
         '$fileNameIdSeparator'
@@ -47,11 +44,17 @@ class Downloader {
     final manifest = await _yt.videos.streamsClient.getManifest(videoId);
     switch (config.format) {
       case Format.audio:
-        return manifest.audioOnly.sortByBitrate().first;
+        return manifest.audioOnly
+            .sortByBitrate()
+            .first;
       case Format.video:
-        return manifest.videoOnly.sortByVideoQuality().first;
+        return manifest.videoOnly
+            .sortByVideoQuality()
+            .first;
       case Format.muxed:
-        return manifest.muxed.sortByVideoQuality().first;
+        return manifest.muxed
+            .sortByVideoQuality()
+            .first;
     }
   }
 
@@ -69,17 +72,6 @@ class Downloader {
       if (file.existsSync()) await file.delete();
       return false;
     }
-  }
-
-  /// Check if a file with the same video ID already exists.
-  Future<bool> _videoAlreadyDownloaded() async {
-    return config.directory
-        .list()
-        .map(
-          (file) => basenameWithoutExtension(file.path),
-        )
-        .map((name) => name.split(fileNameIdSeparator).last)
-        .any((id) => id == videoId);
   }
 
   /// Run the command on the newly-downloaded file.
@@ -103,9 +95,6 @@ class Downloader {
 
   /// Downloads the video.
   Future<DownloaderResult> download() async {
-    // Check if we already have this one in case we can skip.
-    if (await _videoAlreadyDownloaded()) return DownloaderResult.fileExists;
-
     final video = await _yt.videos.get(videoId);
 
     final StreamInfo streamInfo;
@@ -122,8 +111,11 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-        join(config.directory.path, _getFileNameForStream(video, streamInfo));
+    join(config.directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
+
+    // Skip if this file exists already.
+    if (file.existsSync()) return DownloaderResult.fileExists;
 
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);

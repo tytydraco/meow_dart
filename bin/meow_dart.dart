@@ -104,8 +104,9 @@ Future<void> main(List<String> args) async {
       command: command,
     );
 
-    final spawner = DownloaderSpawner(maxConcurrent: maxConcurrent);
-    final meowDart = MeowDart(config: config, spawner: spawner);
+    final spawner = DownloaderSpawner(config, maxConcurrent: maxConcurrent);
+    await spawner.cacheExistingDownloads();
+    final meowDart = MeowDart(spawner: spawner);
 
     // Stop all requests if there is an exit request.
     final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {

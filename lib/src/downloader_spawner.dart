@@ -5,13 +5,15 @@ import 'package:meow_dart/src/downloader.dart';
 import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
+import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 import 'package:stdlog/stdlog.dart';
 
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner({
+  DownloaderSpawner(
+    this.config, {
     required this.maxConcurrent,
   }) {
     if (maxConcurrent < 1) {
@@ -19,11 +21,29 @@ class DownloaderSpawner {
     }
   }
 
+  /// The downloader config to use.
+  final DownloaderConfig config;
+
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
 
   /// Resource pool that specifies the maximum number of concurrent downloads.
   late final _pool = Pool(maxConcurrent);
+
+  /// A list of IDs of already downloaded videos.
+  final _existingIds = <String>{};
+
+  /// Cache all existing video IDs from this current directory to avoid
+  /// downloading a video twice.
+  Future<void> cacheExistingDownloads() async {
+    await config.directory
+        .list()
+        .map(
+          (file) => basenameWithoutExtension(file.path),
+        )
+        .map((name) => name.split(Downloader.fileNameIdSeparator).last)
+        .forEach(_existingIds.add);
+  }
 
   /// Output the result of the download.
   void _handleResult(String videoId, DownloaderResult result) {
@@ -39,6 +59,7 @@ class DownloaderSpawner {
         break;
       case DownloaderResult.success:
         info('$videoId\tDownloaded successfully.');
+        _existingIds.add(videoId);
         break;
     }
   }
@@ -71,12 +92,15 @@ class DownloaderSpawner {
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(
-    DownloaderConfig config, {
-    required String videoId,
-  }) async {
+  Future<void> spawnDownloader(String videoId) async {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
+
+    // Do a rapid existence check.
+    if (_existingIds.contains(videoId)) {
+      _handleResult(videoId, DownloaderResult.fileExists);
+      return;
+    }
 
     // Grab a resource.
     final poolResource = await _pool.request();

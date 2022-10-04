@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -10,12 +9,8 @@ export 'src/format.dart';
 class MeowDart {
   /// Creates a new [MeowDart] given a directory.
   MeowDart({
-    required this.config,
     required this.spawner,
   });
-
-  /// The downloader config to use.
-  final DownloaderConfig config;
 
   /// The downloader spawner to use.
   final DownloaderSpawner spawner;
@@ -26,7 +21,7 @@ class MeowDart {
   /// Download a video to the specified directory.
   Future<void> archiveVideo(String url) async {
     final video = await _yt.videos.get(url);
-    await spawner.spawnDownloader(config, videoId: video.id.value);
+    await spawner.spawnDownloader(video.id.value);
   }
 
   /// Download a playlist to the specified directory.
@@ -35,7 +30,7 @@ class MeowDart {
     final videosStream = _yt.playlists.getVideos(playlist.id);
 
     await for (final video in videosStream) {
-      await spawner.spawnDownloader(config, videoId: video.id.value);
+      await spawner.spawnDownloader(video.id.value);
     }
   }
 }
