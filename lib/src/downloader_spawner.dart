@@ -45,7 +45,7 @@ class DownloaderSpawner {
         .forEach(_existingIds.add);
   }
 
-  /// Output the result of the download.
+  /// Output the result of the download and perform any related logic.
   void _handleResult(String videoId, DownloaderResult result) {
     switch (result) {
       case DownloaderResult.badStream:
@@ -59,6 +59,7 @@ class DownloaderSpawner {
         break;
       case DownloaderResult.success:
         info('$videoId\tDownloaded successfully.');
+        // Cache the ID now that we know it successfully downloaded.
         _existingIds.add(videoId);
         break;
     }
