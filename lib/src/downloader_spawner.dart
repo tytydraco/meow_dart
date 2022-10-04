@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -30,7 +31,7 @@ class DownloaderSpawner {
   late final _pool = Pool(maxConcurrent);
 
   /// A list of IDs of already downloaded videos.
-  final _existingIds = <String>{};
+  final _existingIds = HashSet<String>();
 
   /// Cache all existing video IDs from this current directory to avoid
   /// downloading a video twice.
