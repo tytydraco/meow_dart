@@ -7,7 +7,6 @@ import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
-import 'package:stdlog/stdlog.dart';
 
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
@@ -45,26 +44,6 @@ class DownloaderSpawner {
         .forEach(_existingIds.add);
   }
 
-  /// Output the result of the download and perform any related logic.
-  void _handleResult(String videoId, DownloaderResult result) {
-    switch (result) {
-      case DownloaderResult.badStream:
-        error('$videoId\tFailed to fetch the audio stream.');
-        break;
-      case DownloaderResult.badWrite:
-        error('$videoId\tFailed to write the output content.');
-        break;
-      case DownloaderResult.fileExists:
-        debug('$videoId\tAlready downloaded.');
-        break;
-      case DownloaderResult.success:
-        info('$videoId\tDownloaded successfully.');
-        // Cache the ID now that we know it successfully downloaded.
-        _existingIds.add(videoId);
-        break;
-    }
-  }
-
   /// Creates a new isolate for the downloader task.
   static Future<void> _isolateTask(List<Object?> args) async {
     final sendPort = args[0]! as SendPort;
@@ -93,13 +72,16 @@ class DownloaderSpawner {
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(String videoId) async {
+  Future<void> spawnDownloader(
+    String videoId, {
+    void Function(DownloaderResult result)? resultHandler,
+  }) async {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
 
     // Do a rapid existence check.
     if (_existingIds.contains(videoId)) {
-      _handleResult(videoId, DownloaderResult.fileExists);
+      resultHandler?.call(DownloaderResult.fileExists);
       return;
     }
 
@@ -111,11 +93,16 @@ class DownloaderSpawner {
     final port = ReceivePort();
     port.listen((message) {
       final result = message as DownloaderResult?;
-      if (result != null) _handleResult(videoId, result);
+
+      // Cache the ID now that we know it successfully downloaded.
+      if (result == DownloaderResult.success) _existingIds.add(videoId);
       poolResource.release();
 
       // Do not allow any more incoming messages.
       port.close();
+
+      // Return the result so it can be handled.
+      if (result != null) resultHandler?.call(result);
     });
 
     // Spawn the task.

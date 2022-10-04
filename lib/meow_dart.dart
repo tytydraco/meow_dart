@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
+import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 export 'src/format.dart';
@@ -18,10 +20,32 @@ class MeowDart {
   /// The YouTube downloader instance used only to get metadata.
   final _yt = YoutubeExplode();
 
+  /// Output the result of the download.
+  void _handleResult(String videoId, DownloaderResult result) {
+    switch (result) {
+      case DownloaderResult.badStream:
+        error('$videoId\tFailed to fetch the audio stream.');
+        break;
+      case DownloaderResult.badWrite:
+        error('$videoId\tFailed to write the output content.');
+        break;
+      case DownloaderResult.fileExists:
+        debug('$videoId\tAlready downloaded.');
+        break;
+      case DownloaderResult.success:
+        info('$videoId\tDownloaded successfully.');
+        break;
+    }
+  }
+
   /// Download a video to the specified directory.
   Future<void> archiveVideo(String url) async {
     final video = await _yt.videos.get(url);
-    await spawner.spawnDownloader(video.id.value);
+    final videoId = video.id.value;
+    await spawner.spawnDownloader(
+      videoId,
+      resultHandler: (result) => _handleResult(videoId, result),
+    );
   }
 
   /// Download a playlist to the specified directory.
@@ -30,7 +54,11 @@ class MeowDart {
     final videosStream = _yt.playlists.getVideos(playlist.id);
 
     await for (final video in videosStream) {
-      await spawner.spawnDownloader(video.id.value);
+      final videoId = video.id.value;
+      await spawner.spawnDownloader(
+        videoId,
+        resultHandler: (result) => _handleResult(videoId, result),
+      );
     }
   }
 }
