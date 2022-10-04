@@ -62,6 +62,7 @@ Future<void> main(List<String> args) async {
     );
 
   try {
+    // Parse all results.
     final results = argParser.parse(args);
     final directory = results['directory'] as String;
     final urls = results['url'] as List<String>;
@@ -106,8 +107,12 @@ Future<void> main(List<String> args) async {
     final spawner = DownloaderSpawner(maxConcurrent: maxConcurrent);
     final meowDart = MeowDart(config: config, spawner: spawner);
 
-    // Handle SIGINT gracefully.
-    final exitHandler = meowDart.registerExitHandler();
+    // Stop all requests if there is an exit request.
+    final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
+      error('Halt! Waiting for current downloads to finish.');
+      await spawner.close();
+      exit(0);
+    });
 
     // Archive all URLs.
     switch (modeStr) {
