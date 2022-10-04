@@ -20,8 +20,8 @@ Install the program using the following command:
 -d, --directory         The directory to download to.
                         (defaults to ".")
 -u, --url               The YouTube URL to download. Multiple can be specified using a comma, or be specifying multiple URL options.
--k, --max-concurrent    The maximum number of concurrent downloads to do at once.
-                        (defaults to "8")
+-k, --max-concurrent    The maximum number of concurrent downloads to do at once. By default, it will be set to the number of CPU cores.
+                        (defaults to "16")
 -f, --format            The output format to use.
                         [audio, video, muxed (default)]
 -m, --mode              The download mode for the URL.
