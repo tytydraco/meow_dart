@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:meow_dart/src/downloader.dart';
 import 'package:meow_dart/src/downloader_config.dart';
+import 'package:meow_dart/src/downloader_isolate_data.dart';
 import 'package:meow_dart/src/downloader_result.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
@@ -44,22 +45,14 @@ class DownloaderSpawner {
   }
 
   /// Creates a new isolate for the downloader task.
-  static Future<void> _isolateTask(List<Object?> args) async {
-    final sendPort = args[0]! as SendPort;
-    final videoId = args[1]! as String;
-    final config = args[2]! as DownloaderConfig;
-
+  static Future<void> _isolateTask(DownloaderIsolateData data) async {
     final downloader = Downloader(
-      DownloaderConfig(
-        directory: config.directory,
-        format: config.format,
-        commands: config.commands,
-      ),
-      videoId: videoId,
+      data.config,
+      videoId: data.videoId,
     );
 
     final result = await downloader.download();
-    sendPort.send(result);
+    data.sendPort.send(result);
     Isolate.exit();
   }
 
@@ -105,11 +98,11 @@ class DownloaderSpawner {
     // Spawn the task.
     await Isolate.spawn(
       _isolateTask,
-      [
-        port.sendPort,
-        videoId,
-        config,
-      ],
+      DownloaderIsolateData(
+        sendPort: port.sendPort,
+        config: config,
+        videoId: videoId,
+      ),
       onExit: port.sendPort,
     );
   }
