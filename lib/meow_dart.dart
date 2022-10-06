@@ -1,18 +1,18 @@
 import 'dart:async';
 
-import 'package:meow_dart/src/downloader_result.dart';
+import 'package:meow_dart/src/data/result.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-export 'src/format.dart';
+export 'src/data/config.dart';
+export 'src/data/format.dart';
+export 'src/downloader_spawner.dart';
 
 /// A portable YouTube archiver.
 class MeowDart {
-  /// Creates a new [MeowDart] given a directory.
-  MeowDart({
-    required this.spawner,
-  });
+  /// Creates a new [MeowDart] given a [spawner].
+  MeowDart({required this.spawner});
 
   /// The downloader spawner to use.
   final DownloaderSpawner spawner;
@@ -21,21 +21,21 @@ class MeowDart {
   final _yt = YoutubeExplode();
 
   /// Output the result of the download.
-  void _handleResult(String videoId, DownloaderResult result) {
+  void _handleResult(String videoId, Result result) {
     switch (result) {
-      case DownloaderResult.badStream:
+      case Result.badStream:
         error('$videoId\tFailed to fetch the audio stream.');
         break;
-      case DownloaderResult.badWrite:
+      case Result.badWrite:
         error('$videoId\tFailed to write the output content.');
         break;
-      case DownloaderResult.badCommand:
+      case Result.badCommand:
         warn('$videoId\tA command finished with a non-zero exit code.');
         break;
-      case DownloaderResult.fileExists:
+      case Result.fileExists:
         debug('$videoId\tAlready downloaded.');
         break;
-      case DownloaderResult.success:
+      case Result.success:
         info('$videoId\tDownloaded successfully.');
         break;
     }

@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:meow_dart/src/format.dart';
+import 'package:meow_dart/src/data/format.dart';
 
 /// The configuration for the download.
-class DownloaderConfig {
-  /// Creates a new [DownloaderConfig].
-  DownloaderConfig({
+class Config {
+  /// Creates a new [Config].
+  Config({
     required this.directory,
     this.format = Format.muxed,
     this.commands = const [],

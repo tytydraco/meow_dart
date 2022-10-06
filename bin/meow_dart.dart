@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
-import 'package:meow_dart/src/downloader_config.dart';
-import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:stdlog/stdlog.dart';
 
 Future<void> main(List<String> args) async {
@@ -97,7 +95,7 @@ Future<void> main(List<String> args) async {
   }
 
   /// Set up the downloader config we will be using.
-  final config = DownloaderConfig(
+  final config = Config(
     directory: inputDirectory,
     format: format,
     commands: commands,

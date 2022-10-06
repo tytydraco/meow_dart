@@ -1,17 +1,18 @@
 import 'dart:collection';
 import 'dart:isolate';
 
+import 'package:meow_dart/src/data/config.dart';
+import 'package:meow_dart/src/data/result.dart';
 import 'package:meow_dart/src/downloader.dart';
-import 'package:meow_dart/src/downloader_config.dart';
-import 'package:meow_dart/src/downloader_isolate_data.dart';
-import 'package:meow_dart/src/downloader_result.dart';
+import 'package:meow_dart/src/models/isolate_data.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
-  /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner(this.config, {
+  /// Creates a new [DownloaderSpawner] given a [config].
+  DownloaderSpawner(
+    this.config, {
     required this.maxConcurrent,
   }) {
     if (maxConcurrent < 1) {
@@ -20,7 +21,7 @@ class DownloaderSpawner {
   }
 
   /// The downloader config to use.
-  final DownloaderConfig config;
+  final Config config;
 
   /// The maximum number of concurrent downloads to do at once.
   final int maxConcurrent;
@@ -38,24 +39,22 @@ class DownloaderSpawner {
         .list()
         .map(
           (file) => basenameWithoutExtension(file.path),
-    )
-        .map((name) =>
-    name
-        .split(Downloader.fileNameIdSeparator)
-        .last)
+        )
+        .map((name) => name.split(Downloader.fileNameIdSeparator).last)
         .forEach(_existingIds.add);
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(String videoId, {
-    void Function(DownloaderResult result)? resultHandler,
+  Future<void> spawnDownloader(
+    String videoId, {
+    void Function(Result result)? resultHandler,
   }) async {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
 
     // Do a rapid existence check.
     if (_existingIds.contains(videoId)) {
-      resultHandler?.call(DownloaderResult.fileExists);
+      resultHandler?.call(Result.fileExists);
       return;
     }
 
@@ -69,10 +68,10 @@ class DownloaderSpawner {
       // Do not allow any more incoming messages.
       port.close();
 
-      final result = message as DownloaderResult?;
+      final result = message as Result?;
 
       // Cache the ID now that we know it successfully downloaded.
-      if (result == DownloaderResult.success) _existingIds.add(videoId);
+      if (result == Result.success) _existingIds.add(videoId);
       poolResource.release();
 
       // Return the result so it can be handled.
@@ -80,7 +79,7 @@ class DownloaderSpawner {
     });
 
     // Neatly package the downloader and related info to the isolate.
-    final data = DownloaderIsolateData(
+    final data = IsolateData(
       sendPort: port.sendPort,
       downloader: Downloader(config, videoId: videoId),
     );
@@ -89,7 +88,7 @@ class DownloaderSpawner {
     await Isolate.spawn(
       // Simply trigger the download from the passed downloader and forward the
       // result.
-          (DownloaderIsolateData data) async {
+      (IsolateData data) async {
         final result = await data.downloader.download();
         data.downloader.dispose();
         data.sendPort.send(result);

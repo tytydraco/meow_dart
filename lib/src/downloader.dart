@@ -1,22 +1,22 @@
 import 'dart:io';
 
 import 'package:io/io.dart';
-import 'package:meow_dart/src/downloader_config.dart';
-import 'package:meow_dart/src/downloader_result.dart';
-import 'package:meow_dart/src/format.dart';
+import 'package:meow_dart/src/data/config.dart';
+import 'package:meow_dart/src/data/format.dart';
+import 'package:meow_dart/src/data/result.dart';
 import 'package:path/path.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality stream to a file.
 class Downloader {
-  /// Creates a new [Downloader] given a downloader config.
+  /// Creates a new [Downloader] given a [config].
   Downloader(
     this.config, {
     required this.videoId,
   });
 
   /// The downloader config to use.
-  final DownloaderConfig config;
+  final Config config;
 
   /// The YouTube video ID to use.
   final String videoId;
@@ -94,7 +94,7 @@ class Downloader {
   }
 
   /// Downloads the video.
-  Future<DownloaderResult> download() async {
+  Future<Result> download() async {
     final video = await _yt.videos.get(videoId);
 
     final StreamInfo streamInfo;
@@ -106,7 +106,7 @@ class Downloader {
       byteStream = _yt.videos.streamsClient.get(streamInfo);
     } catch (_) {
       // Failed to fetch stream info.
-      return DownloaderResult.badStream;
+      return Result.badStream;
     }
 
     // Figure out where to put this file.
@@ -115,17 +115,17 @@ class Downloader {
     final file = File(filePath);
 
     // Skip if this file exists already.
-    if (file.existsSync()) return DownloaderResult.fileExists;
+    if (file.existsSync()) return Result.fileExists;
 
     // Pipe byte stream to file.
     final wrote = await _writeFile(file, byteStream);
-    if (!wrote) return DownloaderResult.badWrite;
+    if (!wrote) return Result.badWrite;
 
     // Run the optional commands.
     final commandsSuccess = await _executeCommands(file);
-    if (!commandsSuccess) return DownloaderResult.badCommand;
+    if (!commandsSuccess) return Result.badCommand;
 
-    return DownloaderResult.success;
+    return Result.success;
   }
 
   /// Closes the YouTube client.
