@@ -61,82 +61,77 @@ Future<void> main(List<String> args) async {
           'Multiple commands can be specified.',
     );
 
-  try {
-    // Parse all results.
-    final results = argParser.parse(args);
-    final directory = results['directory'] as String;
-    final ids = results['id'] as List<String>;
-    final maxConcurrent = int.parse(results['max-concurrent'] as String);
-    final commands = results['command'] as List<String>;
-    final formatStr = results['format'] as String;
-    final modeStr = results['mode'] as String;
+  // Parse all results.
+  final results = argParser.parse(args);
+  final directory = results['directory'] as String;
+  final ids = results['id'] as List<String>;
+  final maxConcurrent = int.parse(results['max-concurrent'] as String);
+  final commands = results['command'] as List<String>;
+  final formatStr = results['format'] as String;
+  final modeStr = results['mode'] as String;
 
-    final Format format;
-    switch (formatStr) {
-      case 'audio':
-        format = Format.audio;
-        break;
-      case 'video':
-        format = Format.video;
-        break;
-      default:
-        format = Format.muxed;
-        break;
-    }
+  final Format format;
+  switch (formatStr) {
+    case 'audio':
+      format = Format.audio;
+      break;
+    case 'video':
+      format = Format.video;
+      break;
+    default:
+      format = Format.muxed;
+      break;
+  }
 
-    // Exit if a bad directory path was specified.
-    final inputDirectory = Directory(directory);
-    if (!inputDirectory.existsSync()) {
-      error('Directory does not exist.');
-      exit(1);
-    }
-
-    // Exit if we have nothing to process.
-    if (ids.isEmpty) {
-      warn('No IDs specified');
-      exit(0);
-    }
-
-    /// Set up the downloader config we will be using.
-    final config = DownloaderConfig(
-      directory: inputDirectory,
-      format: format,
-      commands: commands,
-    );
-
-    final spawner = DownloaderSpawner(config, maxConcurrent: maxConcurrent);
-    await spawner.cacheExistingDownloads();
-    final meowDart = MeowDart(spawner: spawner);
-
-    // Stop all requests if there is an exit request.
-    final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
-      error('Halt! Waiting for current downloads to finish.');
-      await spawner.close();
-      exit(0);
-    });
-
-    final Future<void> Function(String id) downloadMethod;
-    switch (modeStr) {
-      case 'playlist':
-        downloadMethod = meowDart.archivePlaylist;
-        break;
-      default:
-        downloadMethod = meowDart.archiveVideo;
-        break;
-    }
-
-    // Archive all IDs.
-    for (final id in ids) {
-      await downloadMethod(id);
-    }
-
-    // Clean up.
-    meowDart.dispose();
-
-    // Exit gracefully.
-    await exitHandler.cancel();
-  } catch (e) {
-    stdout.writeln(e.toString());
+  // Exit if a bad directory path was specified.
+  final inputDirectory = Directory(directory);
+  if (!inputDirectory.existsSync()) {
+    error('Directory does not exist.');
     exit(1);
   }
+
+  // Exit if we have nothing to process.
+  if (ids.isEmpty) {
+    warn('No IDs specified');
+    exit(0);
+  }
+
+  /// Set up the downloader config we will be using.
+  final config = DownloaderConfig(
+    directory: inputDirectory,
+    format: format,
+    commands: commands,
+  );
+
+  final spawner = DownloaderSpawner(config, maxConcurrent: maxConcurrent);
+  await spawner.cacheExistingDownloads();
+  final meowDart = MeowDart(spawner: spawner);
+
+  // Stop all requests if there is an exit request.
+  final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
+    error('Halt! Waiting for current downloads to finish.');
+    await spawner.close();
+    exit(0);
+  });
+
+  final Future<void> Function(String id) downloadMethod;
+  switch (modeStr) {
+    case 'playlist':
+      downloadMethod = meowDart.archivePlaylist;
+      break;
+    default:
+      downloadMethod = meowDart.archiveVideo;
+      break;
+  }
+
+  // Archive all IDs.
+  for (final id in ids) {
+    await downloadMethod(id);
+  }
+
+  // Clean up.
+  meowDart.dispose();
+
+  // Exit gracefully.
+  await exitHandler.cancel();
 }
