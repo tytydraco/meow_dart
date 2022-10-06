@@ -106,8 +106,21 @@ Future<void> main(List<String> args) async {
   final meowDart = MeowDart(spawner: spawner);
 
   // Stop all requests if there is an exit request.
+  var forceQuit = false;
   final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
-    error('Halt! Waiting for current downloads to finish.');
+    // Consider bailing without proper cleanup.
+    if (forceQuit) {
+      error('Force quit.');
+      exit(1);
+    }
+
+    // If the user triggers it again, exit forcefully.
+    forceQuit = true;
+
+    error(
+      'Halt! Waiting for queued downloads to finish. '
+      'Interrupt again to force quit.',
+    );
     await spawner.close();
     exit(0);
   });
