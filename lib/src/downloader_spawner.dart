@@ -44,23 +44,6 @@ class DownloaderSpawner {
         .forEach(_existingIds.add);
   }
 
-  /// Creates a new isolate for the downloader task.
-  static Future<void> _isolateTask(DownloaderIsolateData data) async {
-    final downloader = Downloader(
-      data.config,
-      videoId: data.videoId,
-    );
-
-    final result = await downloader.download();
-    data.sendPort.send(result);
-    Isolate.exit();
-  }
-
-  /// Prevent any more downloads from being started.
-  Future<void> close() async {
-    await _pool.close();
-  }
-
   /// Spawn a new isolate to download this video.
   Future<void> spawnDownloader(
     String videoId, {
@@ -95,15 +78,28 @@ class DownloaderSpawner {
       if (result != null) resultHandler?.call(result);
     });
 
+    // Neatly package the downloader and related info to the isolate.
+    final data = DownloaderIsolateData(
+      sendPort: port.sendPort,
+      downloader: Downloader(config, videoId: videoId),
+    );
+
     // Spawn the task.
     await Isolate.spawn(
-      _isolateTask,
-      DownloaderIsolateData(
-        sendPort: port.sendPort,
-        config: config,
-        videoId: videoId,
-      ),
+      // Simply trigger the download from the passed downloader and forward the
+      // result.
+      (DownloaderIsolateData data) async {
+        final result = await data.downloader.download();
+        data.sendPort.send(result);
+        Isolate.exit();
+      },
+      data,
       onExit: port.sendPort,
     );
+  }
+
+  /// Prevent any more downloads from being started.
+  Future<void> close() async {
+    await _pool.close();
   }
 }
