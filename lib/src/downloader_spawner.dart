@@ -11,8 +11,7 @@ import 'package:pool/pool.dart';
 /// Handles the spawning of multithreaded downloads.
 class DownloaderSpawner {
   /// Creates a new [DownloaderSpawner] with a given thread limit.
-  DownloaderSpawner(
-    this.config, {
+  DownloaderSpawner(this.config, {
     required this.maxConcurrent,
   }) {
     if (maxConcurrent < 1) {
@@ -39,14 +38,16 @@ class DownloaderSpawner {
         .list()
         .map(
           (file) => basenameWithoutExtension(file.path),
-        )
-        .map((name) => name.split(Downloader.fileNameIdSeparator).last)
+    )
+        .map((name) =>
+    name
+        .split(Downloader.fileNameIdSeparator)
+        .last)
         .forEach(_existingIds.add);
   }
 
   /// Spawn a new isolate to download this video.
-  Future<void> spawnDownloader(
-    String videoId, {
+  Future<void> spawnDownloader(String videoId, {
     void Function(DownloaderResult result)? resultHandler,
   }) async {
     /// Skip the download if the pool has been closed.
@@ -65,14 +66,14 @@ class DownloaderSpawner {
     // release the resource.
     final port = ReceivePort();
     port.listen((message) {
+      // Do not allow any more incoming messages.
+      port.close();
+
       final result = message as DownloaderResult?;
 
       // Cache the ID now that we know it successfully downloaded.
       if (result == DownloaderResult.success) _existingIds.add(videoId);
       poolResource.release();
-
-      // Do not allow any more incoming messages.
-      port.close();
 
       // Return the result so it can be handled.
       if (result != null) resultHandler?.call(result);
@@ -88,7 +89,7 @@ class DownloaderSpawner {
     await Isolate.spawn(
       // Simply trigger the download from the passed downloader and forward the
       // result.
-      (DownloaderIsolateData data) async {
+          (DownloaderIsolateData data) async {
         final result = await data.downloader.download();
         data.downloader.dispose();
         data.sendPort.send(result);
