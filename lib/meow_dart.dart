@@ -51,11 +51,7 @@ class MeowDart {
     final videosStream = _yt.playlists.getVideos(id);
 
     await for (final video in videosStream) {
-      final videoId = video.id.value;
-      await spawner.spawnDownloader(
-        videoId,
-        resultHandler: (result) => _handleResult(videoId, result),
-      );
+      await archiveVideo(video.id.value);
     }
   }
 
