@@ -130,7 +130,10 @@ Future<void> main(List<String> args) async {
       await downloadMethod(id);
     }
 
-    /// Exit gracefully.
+    // Clean up.
+    meowDart.dispose();
+
+    // Exit gracefully.
     await exitHandler.cancel();
   } catch (e) {
     stdout.writeln(e.toString());

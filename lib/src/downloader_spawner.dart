@@ -90,8 +90,8 @@ class DownloaderSpawner {
       // result.
       (DownloaderIsolateData data) async {
         final result = await data.downloader.download();
+        data.downloader.dispose();
         data.sendPort.send(result);
-        Isolate.exit();
       },
       data,
       onExit: port.sendPort,

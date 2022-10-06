@@ -58,4 +58,7 @@ class MeowDart {
       );
     }
   }
+
+  /// Closes the YouTube client.
+  void dispose() => _yt.close();
 }

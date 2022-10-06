@@ -11,7 +11,8 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a downloader config.
-  Downloader(this.config, {
+  Downloader(
+    this.config, {
     required this.videoId,
   });
 
@@ -28,8 +29,10 @@ class Downloader {
   late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
-  String _getFileNameForStream(Video video,
-      StreamInfo streamInfo,) {
+  String _getFileNameForStream(
+    Video video,
+    StreamInfo streamInfo,
+  ) {
     final fileExtension = streamInfo.container.name;
     final name = '${video.title.replaceAll('/', '')}'
         '$fileNameIdSeparator'
@@ -44,17 +47,11 @@ class Downloader {
     final manifest = await _yt.videos.streamsClient.getManifest(videoId);
     switch (config.format) {
       case Format.audio:
-        return manifest.audioOnly
-            .sortByBitrate()
-            .first;
+        return manifest.audioOnly.sortByBitrate().first;
       case Format.video:
-        return manifest.videoOnly
-            .sortByVideoQuality()
-            .first;
+        return manifest.videoOnly.sortByVideoQuality().first;
       case Format.muxed:
-        return manifest.muxed
-            .sortByVideoQuality()
-            .first;
+        return manifest.muxed.sortByVideoQuality().first;
     }
   }
 
@@ -113,7 +110,7 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-    join(config.directory.path, _getFileNameForStream(video, streamInfo));
+        join(config.directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
 
     // Skip if this file exists already.
@@ -128,4 +125,7 @@ class Downloader {
 
     return DownloaderResult.success;
   }
+
+  /// Closes the YouTube client.
+  void dispose() => _yt.close();
 }
