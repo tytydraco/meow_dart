@@ -1,11 +1,9 @@
 import 'dart:collection';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:meow_dart/src/downloader.dart';
 import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_result.dart';
-import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 
@@ -49,15 +47,13 @@ class DownloaderSpawner {
   static Future<void> _isolateTask(List<Object?> args) async {
     final sendPort = args[0]! as SendPort;
     final videoId = args[1]! as String;
-    final directoryPath = args[2]! as String;
-    final format = args[3]! as Format;
-    final commands = args[4]! as List<String>;
+    final config = args[2]! as DownloaderConfig;
 
     final downloader = Downloader(
       DownloaderConfig(
-        directory: Directory(directoryPath),
-        format: format,
-        commands: commands,
+        directory: config.directory,
+        format: config.format,
+        commands: config.commands,
       ),
       videoId: videoId,
     );
@@ -112,9 +108,7 @@ class DownloaderSpawner {
       [
         port.sendPort,
         videoId,
-        config.directory.path,
-        config.format,
-        config.commands,
+        config,
       ],
       onExit: port.sendPort,
     );
