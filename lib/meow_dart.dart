@@ -39,19 +39,16 @@ class MeowDart {
   }
 
   /// Download a video to the specified directory.
-  Future<void> archiveVideo(String url) async {
-    final video = await _yt.videos.get(url);
-    final videoId = video.id.value;
+  Future<void> archiveVideo(String id) async {
     await spawner.spawnDownloader(
-      videoId,
-      resultHandler: (result) => _handleResult(videoId, result),
+      id,
+      resultHandler: (result) => _handleResult(id, result),
     );
   }
 
   /// Download a playlist to the specified directory.
-  Future<void> archivePlaylist(String url) async {
-    final playlist = await _yt.playlists.get(url);
-    final videosStream = _yt.playlists.getVideos(playlist.id);
+  Future<void> archivePlaylist(String id) async {
+    final videosStream = _yt.playlists.getVideos(id);
 
     await for (final video in videosStream) {
       final videoId = video.id.value;

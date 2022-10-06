@@ -19,12 +19,12 @@ Install the program using the following command:
 -h, --help              Shows the usage.
 -d, --directory         The directory to download to.
                         (defaults to ".")
--u, --url               The YouTube URL to download. Multiple can be specified using a comma, or be specifying multiple URL options.
+-i, --id                The YouTube ID to download. Multiple can be specified using a comma, or be specifying multiple ID options.
 -k, --max-concurrent    The maximum number of concurrent downloads to do at once. By default, it will be set to the number of CPU cores.
                         (defaults to "16")
 -f, --format            The output format to use.
                         [audio, video, muxed (default)]
--m, --mode              The download mode for the URL.
+-m, --mode              The mode that indicates the download method for the ID.
                         [video (default), playlist]
 -c, --command           A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument.
 ```

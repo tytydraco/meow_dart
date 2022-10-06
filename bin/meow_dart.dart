@@ -28,10 +28,10 @@ Future<void> main(List<String> args) async {
       defaultsTo: '.',
     )
     ..addMultiOption(
-      'url',
-      abbr: 'u',
-      help: 'The YouTube URL to download. Multiple can be specified using a '
-          'comma, or be specifying multiple URL options.',
+      'id',
+      abbr: 'i',
+      help: 'The YouTube ID to download. Multiple can be specified using a '
+          'comma, or be specifying multiple ID options.',
     )
     ..addOption(
       'max-concurrent',
@@ -50,7 +50,7 @@ Future<void> main(List<String> args) async {
     ..addOption(
       'mode',
       abbr: 'm',
-      help: 'The download mode for the URL.',
+      help: 'The mode that indicates the download method for the ID.',
       allowed: ['video', 'playlist'],
       defaultsTo: 'video',
     )
@@ -65,13 +65,13 @@ Future<void> main(List<String> args) async {
     // Parse all results.
     final results = argParser.parse(args);
     final directory = results['directory'] as String;
-    final urls = results['url'] as List<String>;
+    final ids = results['id'] as List<String>;
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
     final command = results['command'] as String?;
     final formatStr = results['format'] as String;
     final modeStr = results['mode'] as String;
 
-    var format = Format.muxed;
+    final Format format;
     switch (formatStr) {
       case 'audio':
         format = Format.audio;
@@ -79,7 +79,7 @@ Future<void> main(List<String> args) async {
       case 'video':
         format = Format.video;
         break;
-      case 'muxed':
+      default:
         format = Format.muxed;
         break;
     }
@@ -92,8 +92,8 @@ Future<void> main(List<String> args) async {
     }
 
     // Exit if we have nothing to process.
-    if (urls.isEmpty) {
-      warn('No URLs specified');
+    if (ids.isEmpty) {
+      warn('No IDs specified');
       exit(0);
     }
 
@@ -115,18 +115,19 @@ Future<void> main(List<String> args) async {
       exit(0);
     });
 
-    // Archive all URLs.
+    final Future<void> Function(String id) downloadMethod;
     switch (modeStr) {
-      case 'video':
-        for (final url in urls) {
-          await meowDart.archiveVideo(url);
-        }
-        break;
       case 'playlist':
-        for (final url in urls) {
-          await meowDart.archivePlaylist(url);
-        }
+        downloadMethod = meowDart.archivePlaylist;
         break;
+      default:
+        downloadMethod = meowDart.archiveVideo;
+        break;
+    }
+
+    // Archive all IDs.
+    for (final id in ids) {
+      await downloadMethod(id);
     }
 
     /// Exit gracefully.
