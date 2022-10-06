@@ -29,6 +29,9 @@ class MeowDart {
       case DownloaderResult.badWrite:
         error('$videoId\tFailed to write the output content.');
         break;
+      case DownloaderResult.badCommand:
+        warn('$videoId\tA command finished with a non-zero exit code.');
+        break;
       case DownloaderResult.fileExists:
         debug('$videoId\tAlready downloaded.');
         break;

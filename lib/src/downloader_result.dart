@@ -8,6 +8,9 @@ enum DownloaderResult {
   /// Failed to pipe the stream to the file.
   badWrite,
 
+  /// One or more commands finished with a non-zero exit code.
+  badCommand,
+
   /// The file already exists.
   fileExists,
 

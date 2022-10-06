@@ -5,7 +5,6 @@ import 'package:meow_dart/src/downloader_config.dart';
 import 'package:meow_dart/src/downloader_result.dart';
 import 'package:meow_dart/src/format.dart';
 import 'package:path/path.dart';
-import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality stream to a file.
@@ -71,10 +70,12 @@ class Downloader {
     }
   }
 
-  /// Run the commands on the newly-downloaded file.
-  Future<void> _executeCommands(File file) async {
+  /// Run the commands on the newly-downloaded file. If any command exits with
+  /// a non-zero exit code, the function returns false. It returns true if all
+  /// commands succeed.
+  Future<bool> _executeCommands(File file) async {
     // Skip if no commands were given.
-    if (config.commands.isEmpty) return;
+    if (config.commands.isEmpty) return true;
 
     for (final command in config.commands) {
       final parts = shellSplit(command);
@@ -86,10 +87,10 @@ class Downloader {
       );
 
       final exitCode = await process.exitCode;
-      if (exitCode != 0) {
-        warn('$videoId\tCommand exited with non-zero exit code.');
-      }
+      if (exitCode != 0) return false;
     }
+
+    return true;
   }
 
   /// Downloads the video.
@@ -121,7 +122,8 @@ class Downloader {
     if (!wrote) return DownloaderResult.badWrite;
 
     // Run the optional commands.
-    await _executeCommands(file);
+    final commandsSuccess = await _executeCommands(file);
+    if (!commandsSuccess) return DownloaderResult.badCommand;
 
     return DownloaderResult.success;
   }
