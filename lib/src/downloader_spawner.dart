@@ -51,13 +51,13 @@ class DownloaderSpawner {
     final videoId = args[1]! as String;
     final directoryPath = args[2]! as String;
     final format = args[3]! as Format;
-    final command = args[4] as String?;
+    final commands = args[4]! as List<String>;
 
     final downloader = Downloader(
       DownloaderConfig(
         directory: Directory(directoryPath),
         format: format,
-        command: command,
+        commands: commands,
       ),
       videoId: videoId,
     );
@@ -114,7 +114,7 @@ class DownloaderSpawner {
         videoId,
         config.directory.path,
         config.format,
-        config.command,
+        config.commands,
       ],
       onExit: port.sendPort,
     );

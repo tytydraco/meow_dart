@@ -8,7 +8,7 @@ class DownloaderConfig {
   DownloaderConfig({
     required this.directory,
     this.format = Format.muxed,
-    this.command,
+    this.commands = const [],
   });
 
   /// The directory to place the video in.
@@ -17,6 +17,6 @@ class DownloaderConfig {
   /// The download format type.
   final Format format;
 
-  /// A command to run after each download has been completed.
-  final String? command;
+  /// Ordered commands to run after each download has been completed.
+  final List<String> commands;
 }

@@ -74,22 +74,24 @@ class Downloader {
     }
   }
 
-  /// Run the command on the newly-downloaded file.
-  Future<void> _executeCommand(File file) async {
-    // Skip if no command was given.
-    if (config.command == null) return;
+  /// Run the commands on the newly-downloaded file.
+  Future<void> _executeCommands(File file) async {
+    // Skip if no commands were given.
+    if (config.commands.isEmpty) return;
 
-    final parts = shellSplit(config.command!);
-    final process = await Process.start(
-      parts.first,
-      [...parts.sublist(1), file.path],
-      runInShell: true,
-      mode: ProcessStartMode.inheritStdio,
-    );
+    for (final command in config.commands) {
+      final parts = shellSplit(command);
+      final process = await Process.start(
+        parts.first,
+        [...parts.sublist(1), file.path],
+        runInShell: true,
+        mode: ProcessStartMode.inheritStdio,
+      );
 
-    final exitCode = await process.exitCode;
-    if (exitCode != 0) {
-      warn('$videoId\tCommand exited with non-zero exit code.');
+      final exitCode = await process.exitCode;
+      if (exitCode != 0) {
+        warn('$videoId\tCommand exited with non-zero exit code.');
+      }
     }
   }
 
@@ -121,8 +123,8 @@ class Downloader {
     final wrote = await _writeFile(file, byteStream);
     if (!wrote) return DownloaderResult.badWrite;
 
-    // Run the optional command.
-    await _executeCommand(file);
+    // Run the optional commands.
+    await _executeCommands(file);
 
     return DownloaderResult.success;
   }

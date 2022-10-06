@@ -30,8 +30,7 @@ Future<void> main(List<String> args) async {
     ..addMultiOption(
       'id',
       abbr: 'i',
-      help: 'The YouTube ID to download. Multiple can be specified using a '
-          'comma, or be specifying multiple ID options.',
+      help: 'The YouTube ID to download. Multiple IDs can be specified.',
     )
     ..addOption(
       'max-concurrent',
@@ -54,11 +53,12 @@ Future<void> main(List<String> args) async {
       allowed: ['video', 'playlist'],
       defaultsTo: 'video',
     )
-    ..addOption(
+    ..addMultiOption(
       'command',
       abbr: 'c',
       help: 'A command to run after a download has been completed. The '
-          'downloaded file path will be passed to the command as an argument.',
+          'downloaded file path will be passed to the command as an argument. '
+          'Multiple commands can be specified.',
     );
 
   try {
@@ -67,7 +67,7 @@ Future<void> main(List<String> args) async {
     final directory = results['directory'] as String;
     final ids = results['id'] as List<String>;
     final maxConcurrent = int.parse(results['max-concurrent'] as String);
-    final command = results['command'] as String?;
+    final commands = results['command'] as List<String>;
     final formatStr = results['format'] as String;
     final modeStr = results['mode'] as String;
 
@@ -101,7 +101,7 @@ Future<void> main(List<String> args) async {
     final config = DownloaderConfig(
       directory: inputDirectory,
       format: format,
-      command: command,
+      commands: commands,
     );
 
     final spawner = DownloaderSpawner(config, maxConcurrent: maxConcurrent);
