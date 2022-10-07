@@ -4,6 +4,18 @@ import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
 import 'package:stdlog/stdlog.dart';
 
+/// The download mode.
+enum Mode {
+  /// A single video.
+  video,
+
+  /// A playlist of videos.
+  playlist,
+
+  /// All videos from a channel.
+  channel,
+}
+
 Future<void> main(List<String> args) async {
   final argParser = ArgParser();
   argParser
@@ -66,20 +78,9 @@ Future<void> main(List<String> args) async {
   final maxConcurrent = int.parse(results['max-concurrent'] as String);
   final commands = results['command'] as List<String>;
   final formatStr = results['format'] as String;
+  final format = Format.values.firstWhere((format) => format.name == formatStr);
   final modeStr = results['mode'] as String;
-
-  final Format format;
-  switch (formatStr) {
-    case 'audio':
-      format = Format.audio;
-      break;
-    case 'video':
-      format = Format.video;
-      break;
-    default:
-      format = Format.muxed;
-      break;
-  }
+  final mode = Mode.values.firstWhere((mode) => mode.name == modeStr);
 
   // Exit if a bad directory path was specified.
   final inputDirectory = Directory(directory);
@@ -126,15 +127,15 @@ Future<void> main(List<String> args) async {
   });
 
   final Future<void> Function(String id) downloadMethod;
-  switch (modeStr) {
-    case 'playlist':
+  switch (mode) {
+    case Mode.video:
+      downloadMethod = meowDart.archiveVideo;
+      break;
+    case Mode.playlist:
       downloadMethod = meowDart.archivePlaylist;
       break;
-    case 'channel':
+    case Mode.channel:
       downloadMethod = meowDart.archiveChannel;
-      break;
-    default:
-      downloadMethod = meowDart.archiveVideo;
       break;
   }
 
