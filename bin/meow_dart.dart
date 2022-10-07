@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
+import 'package:meow_dart/src/data/quality.dart';
 import 'package:stdlog/stdlog.dart';
 
 /// The download mode.
@@ -57,6 +58,13 @@ Future<void> main(List<String> args) async {
       defaultsTo: 'muxed',
     )
     ..addOption(
+      'quality',
+      abbr: 'q',
+      help: 'The download quality to use.',
+      allowed: ['worst', 'average', 'best'],
+      defaultsTo: 'best',
+    )
+    ..addOption(
       'mode',
       abbr: 'm',
       help: 'The mode that indicates the download method for the ID.',
@@ -79,6 +87,9 @@ Future<void> main(List<String> args) async {
   final commands = results['command'] as List<String>;
   final formatStr = results['format'] as String;
   final format = Format.values.firstWhere((format) => format.name == formatStr);
+  final qualityStr = results['quality'] as String;
+  final quality =
+      Quality.values.firstWhere((quality) => quality.name == qualityStr);
   final modeStr = results['mode'] as String;
   final mode = Mode.values.firstWhere((mode) => mode.name == modeStr);
 
@@ -99,6 +110,7 @@ Future<void> main(List<String> args) async {
   final config = Config(
     directory: inputDirectory,
     format: format,
+    quality: quality,
     commands: commands,
   );
 

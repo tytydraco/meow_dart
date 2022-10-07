@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:io/io.dart';
 import 'package:meow_dart/src/data/config.dart';
 import 'package:meow_dart/src/data/format.dart';
+import 'package:meow_dart/src/data/quality.dart';
 import 'package:meow_dart/src/data/result.dart';
 import 'package:path/path.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -10,8 +11,7 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 /// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a [config].
-  Downloader(
-    this.config, {
+  Downloader(this.config, {
     required this.videoId,
   });
 
@@ -28,10 +28,8 @@ class Downloader {
   late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
-  String _getFileNameForStream(
-    Video video,
-    StreamInfo streamInfo,
-  ) {
+  String _getFileNameForStream(Video video,
+      StreamInfo streamInfo,) {
     final fileExtension = streamInfo.container.name;
     final name = '${video.title.replaceAll('/', '')}'
         '$fileNameIdSeparator'
@@ -41,16 +39,31 @@ class Downloader {
     return name;
   }
 
-  /// Returns the highest quality stream.
-  Future<StreamInfo> _getBestStream() async {
-    final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+  /// Return the proper stream list for the config format.
+  List<StreamInfo> _getFormatStreams(StreamManifest manifest) {
     switch (config.format) {
       case Format.audio:
-        return manifest.audioOnly.sortByBitrate().first;
+        return manifest.audioOnly.sortByBitrate();
       case Format.video:
-        return manifest.videoOnly.sortByVideoQuality().first;
+        return manifest.videoOnly.sortByVideoQuality();
       case Format.muxed:
-        return manifest.muxed.sortByVideoQuality().first;
+        return manifest.muxed.sortByVideoQuality();
+    }
+  }
+
+  /// Returns the stream of the config format and quality.
+  Future<StreamInfo> _getStream() async {
+    final manifest = await _yt.videos.streamsClient.getManifest(videoId);
+    final streams = _getFormatStreams(manifest);
+
+    // Choose the appropriate quality.
+    switch (config.quality) {
+      case Quality.worst:
+        return streams.last;
+      case Quality.average:
+        return streams[(streams.length - 1) ~/ 2];
+      case Quality.best:
+        return streams.first;
     }
   }
 
@@ -102,7 +115,7 @@ class Downloader {
 
     try {
       // Get the stream metadata and byte stream.
-      streamInfo = await _getBestStream();
+      streamInfo = await _getStream();
       byteStream = _yt.videos.streamsClient.get(streamInfo);
     } catch (_) {
       // Failed to fetch stream info.
@@ -111,7 +124,7 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-        join(config.directory.path, _getFileNameForStream(video, streamInfo));
+    join(config.directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
 
     // Skip if this file exists already.

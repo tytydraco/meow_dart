@@ -24,6 +24,8 @@ Install the program using the following command:
                         (defaults to "8")
 -f, --format            The output format to use.
                         [audio, video, muxed (default)]
+-q, --quality           The download quality to use.
+                        [worst, average, best (default)]
 -m, --mode              The mode that indicates the download method for the ID.
                         [video (default), playlist, channel]
 -c, --command           A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument. Multiple commands can be specified.
