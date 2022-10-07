@@ -17,7 +17,7 @@ enum Mode {
   channel,
 }
 
-Future<void> main(List<String> args) async {
+ArgResults _parseArgs(List<String> args) {
   final argParser = ArgParser();
   argParser
     ..addFlag(
@@ -78,9 +78,14 @@ Future<void> main(List<String> args) async {
           'downloaded file path will be passed to the command as an argument. '
           'Multiple commands can be specified.',
     );
+  return argParser.parse(args);
+}
+
+Future<void> main(List<String> args) async {
+  // Get results.
+  final results = _parseArgs(args);
 
   // Parse all results.
-  final results = argParser.parse(args);
   final directory = results['directory'] as String;
   final ids = results['id'] as List<String>;
   final maxConcurrent = int.parse(results['max-concurrent'] as String);
@@ -138,18 +143,18 @@ Future<void> main(List<String> args) async {
     exit(0);
   });
 
-  final Future<void> Function(String id) downloadMethod;
-  switch (mode) {
-    case Mode.video:
-      downloadMethod = meowDart.archiveVideo;
-      break;
-    case Mode.playlist:
-      downloadMethod = meowDart.archivePlaylist;
-      break;
-    case Mode.channel:
-      downloadMethod = meowDart.archiveChannel;
-      break;
+  Future<void> Function(String id) getDownloadMethod() {
+    switch (mode) {
+      case Mode.video:
+        return meowDart.archiveVideo;
+      case Mode.playlist:
+        return meowDart.archivePlaylist;
+      case Mode.channel:
+        return meowDart.archiveChannel;
+    }
   }
+
+  final downloadMethod = getDownloadMethod();
 
   // Archive all IDs.
   for (final id in ids) {
