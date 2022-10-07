@@ -5,9 +5,9 @@ import 'package:meow_dart/src/downloader_spawner.dart';
 import 'package:stdlog/stdlog.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-export 'src/data/config.dart';
 export 'src/data/format.dart';
 export 'src/downloader_spawner.dart';
+export 'src/models/config.dart';
 
 /// A portable YouTube archiver.
 class MeowDart {

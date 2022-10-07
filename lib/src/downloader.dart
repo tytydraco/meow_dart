@@ -1,17 +1,18 @@
 import 'dart:io';
 
 import 'package:io/io.dart';
-import 'package:meow_dart/src/data/config.dart';
 import 'package:meow_dart/src/data/format.dart';
 import 'package:meow_dart/src/data/quality.dart';
 import 'package:meow_dart/src/data/result.dart';
+import 'package:meow_dart/src/models/config.dart';
 import 'package:path/path.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 /// Downloads the best-quality stream to a file.
 class Downloader {
   /// Creates a new [Downloader] given a [config].
-  Downloader(this.config, {
+  Downloader(
+    this.config, {
     required this.videoId,
   });
 
@@ -28,8 +29,10 @@ class Downloader {
   late final _yt = YoutubeExplode();
 
   /// Returns a valid file name fore the given video.
-  String _getFileNameForStream(Video video,
-      StreamInfo streamInfo,) {
+  String _getFileNameForStream(
+    Video video,
+    StreamInfo streamInfo,
+  ) {
     final fileExtension = streamInfo.container.name;
     final name = '${video.title.replaceAll('/', '')}'
         '$fileNameIdSeparator'
@@ -124,7 +127,7 @@ class Downloader {
 
     // Figure out where to put this file.
     final filePath =
-    join(config.directory.path, _getFileNameForStream(video, streamInfo));
+        join(config.directory.path, _getFileNameForStream(video, streamInfo));
     final file = File(filePath);
 
     // Skip if this file exists already.

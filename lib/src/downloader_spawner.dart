@@ -1,9 +1,9 @@
 import 'dart:collection';
 import 'dart:isolate';
 
-import 'package:meow_dart/src/data/config.dart';
 import 'package:meow_dart/src/data/result.dart';
 import 'package:meow_dart/src/downloader.dart';
+import 'package:meow_dart/src/models/config.dart';
 import 'package:meow_dart/src/models/isolate_data.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
