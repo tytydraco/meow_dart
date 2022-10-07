@@ -21,10 +21,10 @@ Install the program using the following command:
                         (defaults to ".")
 -i, --id                The YouTube ID to download. Multiple IDs can be specified.
 -k, --max-concurrent    The maximum number of concurrent downloads to do at once. By default, it will be set to the number of CPU cores.
-                        (defaults to "16")
+                        (defaults to "8")
 -f, --format            The output format to use.
                         [audio, video, muxed (default)]
 -m, --mode              The mode that indicates the download method for the ID.
-                        [video (default), playlist]
+                        [video (default), playlist, channel]
 -c, --command           A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument. Multiple commands can be specified.
 ```

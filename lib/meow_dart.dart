@@ -41,7 +41,14 @@ class MeowDart {
     }
   }
 
-  /// Download a video to the specified directory.
+  /// Archive all videos in a video stream.
+  Future<void> _archiveVideoStream(Stream<Video> videosStream) async {
+    await for (final video in videosStream) {
+      await archiveVideo(video.id.value);
+    }
+  }
+
+  /// Download a video.
   Future<void> archiveVideo(String id) async {
     await spawner.spawnDownloader(
       id,
@@ -49,13 +56,16 @@ class MeowDart {
     );
   }
 
-  /// Download a playlist to the specified directory.
+  /// Download a playlist.
   Future<void> archivePlaylist(String id) async {
     final videosStream = _yt.playlists.getVideos(id);
+    await _archiveVideoStream(videosStream);
+  }
 
-    await for (final video in videosStream) {
-      await archiveVideo(video.id.value);
-    }
+  /// Download all uploads from a channel.
+  Future<void> archiveChannel(String id) async {
+    final videoStream = _yt.channels.getUploads(id);
+    await _archiveVideoStream(videoStream);
   }
 
   /// Closes the YouTube client.

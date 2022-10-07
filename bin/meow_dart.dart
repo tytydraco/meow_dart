@@ -48,7 +48,7 @@ Future<void> main(List<String> args) async {
       'mode',
       abbr: 'm',
       help: 'The mode that indicates the download method for the ID.',
-      allowed: ['video', 'playlist'],
+      allowed: ['video', 'playlist', 'channel'],
       defaultsTo: 'video',
     )
     ..addMultiOption(
@@ -129,6 +129,9 @@ Future<void> main(List<String> args) async {
   switch (modeStr) {
     case 'playlist':
       downloadMethod = meowDart.archivePlaylist;
+      break;
+    case 'channel':
+      downloadMethod = meowDart.archiveChannel;
       break;
     default:
       downloadMethod = meowDart.archiveVideo;
