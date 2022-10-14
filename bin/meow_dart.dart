@@ -157,7 +157,9 @@ Future<void> main(List<String> args) async {
   final downloadMethod = getDownloadMethod();
 
   // Archive all IDs.
-  await Future.wait(ids.map(downloadMethod));
+  for (final id in ids) {
+    await downloadMethod(id);
+  }
 
   // Clean up.
   meowDart.dispose();
