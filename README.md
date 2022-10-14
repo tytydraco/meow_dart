@@ -29,4 +29,5 @@ Install the program using the following command:
 -m, --mode              The mode that indicates the download method for the ID.
                         [video (default), playlist, channel]
 -c, --command           A command to run after a download has been completed. The downloaded file path will be passed to the command as an argument. Multiple commands can be specified.
+-s, --[no-]strict       Remove old videos in the directory that were not part of the download.
 ```
