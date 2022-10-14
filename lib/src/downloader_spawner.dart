@@ -52,18 +52,17 @@ class DownloaderSpawner {
     /// Skip the download if the pool has been closed.
     if (_pool.isClosed) return;
 
+    // Do a rapid existence check.
+    if (_existingIds.contains(videoId)) {
+      resultHandler?.call(Result.fileExists);
+      return;
+    }
+
     // Grab a resource.
     final poolResource = await _pool.request();
 
     /// If the pool has closed while we were waiting, skip this download.
     if (_pool.isClosed) {
-      poolResource.release();
-      return;
-    }
-
-    // Do a rapid existence check.
-    if (_existingIds.contains(videoId)) {
-      resultHandler?.call(Result.fileExists);
       poolResource.release();
       return;
     }
