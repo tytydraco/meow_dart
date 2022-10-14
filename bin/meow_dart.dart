@@ -174,7 +174,12 @@ Future<void> main(List<String> args) async {
   if (strict) {
     await inputDirectory.list().forEach((file) {
       final fileName = basenameWithoutExtension(file.path);
-      final videoId = fileName.split(Downloader.fileNameIdSeparator).last;
+      final videoIdParts = fileName.split(Downloader.fileNameIdSeparator);
+
+      // Skip files that don't have the supported extension.
+      if (videoIdParts.isEmpty) return;
+
+      final videoId = videoIdParts.last;
       if (!meowDart.downloadIds.contains(videoId)) {
         info('$videoId\tDeleting stray.');
         file.deleteSync();
