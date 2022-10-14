@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:meow_dart/meow_dart.dart';
 import 'package:meow_dart/src/data/quality.dart';
+import 'package:meow_dart/src/downloader.dart';
+import 'package:path/path.dart';
 import 'package:stdlog/stdlog.dart';
 
 /// The download mode.
@@ -77,6 +79,12 @@ ArgResults _parseArgs(List<String> args) {
       help: 'A command to run after a download has been completed. The '
           'downloaded file path will be passed to the command as an argument. '
           'Multiple commands can be specified.',
+    )
+    ..addFlag(
+      'strict',
+      abbr: 's',
+      help: 'Remove old videos in the directory that were not part of the '
+          'download.',
     );
   return argParser.parse(args);
 }
@@ -97,6 +105,7 @@ Future<void> main(List<String> args) async {
       Quality.values.firstWhere((quality) => quality.name == qualityStr);
   final modeStr = results['mode'] as String;
   final mode = Mode.values.firstWhere((mode) => mode.name == modeStr);
+  final strict = results['strict'] as bool;
 
   // Exit if a bad directory path was specified.
   final inputDirectory = Directory(directory);
@@ -123,8 +132,9 @@ Future<void> main(List<String> args) async {
   await spawner.cacheExistingDownloads();
   final meowDart = MeowDart(spawner: spawner);
 
-  // Stop all requests if there is an exit request.
   var forceQuit = false;
+
+  // Stop all requests if there is an exit request.
   final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
     // Consider bailing without proper cleanup.
     if (forceQuit) {
@@ -159,6 +169,17 @@ Future<void> main(List<String> args) async {
   // Archive all IDs.
   for (final id in ids) {
     await downloadMethod(id);
+  }
+
+  if (strict) {
+    await inputDirectory.list().forEach((file) {
+      final fileName = basenameWithoutExtension(file.path);
+      final videoId = fileName.split(Downloader.fileNameIdSeparator).last;
+      if (!meowDart.downloadIds.contains(videoId)) {
+        info('$videoId\tDeleting stray.');
+        file.deleteSync();
+      }
+    });
   }
 
   // Clean up.

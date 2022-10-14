@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:meow_dart/src/data/result.dart';
 import 'package:meow_dart/src/downloader_spawner.dart';
@@ -19,6 +20,9 @@ class MeowDart {
 
   /// The YouTube downloader instance used only to get metadata.
   final _yt = YoutubeExplode();
+
+  /// A list of video IDs that we have requested to download.
+  final downloadIds = HashSet<String>();
 
   /// Output the result of the download.
   void _handleResult(String videoId, Result result) {
@@ -50,6 +54,7 @@ class MeowDart {
 
   /// Download a video.
   Future<void> archiveVideo(String id) async {
+    downloadIds.add(id);
     await spawner.spawnDownloader(
       id,
       resultHandler: (result) => _handleResult(id, result),
