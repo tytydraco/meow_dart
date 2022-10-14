@@ -64,6 +64,7 @@ class DownloaderSpawner {
     // Do a rapid existence check.
     if (_existingIds.contains(videoId)) {
       resultHandler?.call(Result.fileExists);
+      poolResource.release();
       return;
     }
 
