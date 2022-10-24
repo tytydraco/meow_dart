@@ -28,13 +28,20 @@ class Downloader {
   /// Lazily initialized YouTube download client.
   late final _yt = YoutubeExplode();
 
+  /// Remove some restricted characters from the file name.
+  String _sanitizeFileName(String fileName) => fileName.replaceAll(
+        RegExp(r'["*/:<>?\\|]'),
+        '',
+      );
+
   /// Returns a valid file name fore the given video.
   String _getFileNameForStream(
     Video video,
     StreamInfo streamInfo,
   ) {
     final fileExtension = streamInfo.container.name;
-    final name = '${video.title.replaceAll('/', '')}'
+    final title = _sanitizeFileName(video.title);
+    final name = '$title'
         '$fileNameIdSeparator'
         '${video.id.value}'
         '.$fileExtension';
