@@ -40,13 +40,12 @@ class Downloader {
     StreamInfo streamInfo,
   ) {
     final fileExtension = streamInfo.container.name;
-    final title = _sanitizeFileName(video.title);
-    final name = '$title'
+    final name = '${video.title}'
         '$fileNameIdSeparator'
         '${video.id.value}'
         '.$fileExtension';
 
-    return name;
+    return _sanitizeFileName(name);
   }
 
   /// Return the proper stream list for the config format.
