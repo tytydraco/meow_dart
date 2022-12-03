@@ -135,7 +135,7 @@ Future<void> main(List<String> args) async {
   var forceQuit = false;
 
   // Stop all requests if there is an exit request.
-  final exitHandler = ProcessSignal.sigint.watch().listen((signal) async {
+  final exitHandler = ProcessSignal.sigint.watch().listen((signal) {
     // Consider bailing without proper cleanup.
     if (forceQuit) {
       error('Force quit.');
@@ -149,8 +149,8 @@ Future<void> main(List<String> args) async {
       'Halt! Waiting for queued downloads to finish. '
       'Interrupt again to force quit.',
     );
-    await spawner.close();
-    exit(0);
+  
+    spawner.close().whenComplete(() => exit(0));
   });
 
   Future<void> Function(String id) getDownloadMethod() {
