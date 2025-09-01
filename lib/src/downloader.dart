@@ -5,6 +5,7 @@ import 'package:meow_dart/src/data/format.dart';
 import 'package:meow_dart/src/data/quality.dart';
 import 'package:meow_dart/src/data/result.dart';
 import 'package:meow_dart/src/models/config.dart';
+import 'package:meow_dart/src/youtube_http_client_cookie.dart';
 import 'package:path/path.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -26,7 +27,8 @@ class Downloader {
   static const fileNameIdSeparator = ' ~ ';
 
   /// Lazily initialized YouTube download client.
-  late final _yt = YoutubeExplode();
+  late final _yt =
+      YoutubeExplode(YoutubeHttpClientCookie(cookie: config.cookie));
 
   /// Remove some restricted characters from the file name.
   String _sanitizeFileName(String fileName) => fileName.replaceAll(

@@ -11,6 +11,7 @@ class Config {
     this.format = Format.muxed,
     this.quality = Quality.best,
     this.commands = const [],
+    this.cookie,
   });
 
   /// The directory to place the video in.
@@ -24,4 +25,7 @@ class Config {
 
   /// Ordered commands to run after each download has been completed.
   final List<String> commands;
+
+  /// The user cookie.
+  final String? cookie;
 }

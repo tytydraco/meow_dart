@@ -80,6 +80,11 @@ ArgResults _parseArgs(List<String> args) {
           'downloaded file path will be passed to the command as an argument. '
           'Multiple commands can be specified.',
     )
+    ..addOption(
+      'cookie',
+      abbr: 'C',
+      help: 'Specify a user cookie.',
+    )
     ..addFlag(
       'strict',
       abbr: 's',
@@ -98,6 +103,7 @@ Future<void> main(List<String> args) async {
   final ids = results['id'] as List<String>;
   final maxConcurrent = int.parse(results['max-concurrent'] as String);
   final commands = results['command'] as List<String>;
+  final cookie = results['cookie'] as String?;
   final formatStr = results['format'] as String;
   final format = Format.values.firstWhere((format) => format.name == formatStr);
   final qualityStr = results['quality'] as String;
@@ -126,6 +132,7 @@ Future<void> main(List<String> args) async {
     format: format,
     quality: quality,
     commands: commands,
+    cookie: cookie,
   );
 
   final spawner = DownloaderSpawner(config, maxConcurrent: maxConcurrent);
@@ -149,7 +156,7 @@ Future<void> main(List<String> args) async {
       'Halt! Waiting for queued downloads to finish. '
       'Interrupt again to force quit.',
     );
-  
+
     spawner.close().whenComplete(() => exit(0));
   });
 

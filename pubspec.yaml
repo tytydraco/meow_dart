@@ -14,7 +14,8 @@ dependencies:
   pool: ^1.5.1
   stdlog:
     git: https://github.com/tytydraco/stdlog
-  youtube_explode_dart: ^2.3.9
+  youtube_explode_dart:
+    git: https://github.com/Hexer10/youtube_explode_dart
 
 dev_dependencies:
   test: ^1.16.0
