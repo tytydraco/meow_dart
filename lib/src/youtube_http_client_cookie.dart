@@ -10,7 +10,8 @@ class YoutubeHttpClientCookie extends YoutubeHttpClient {
 
   @override
   Map<String, String> get headers {
-    final superHeaders = super.headers;
+    // Turn the super's header's into modifiable.
+    final superHeaders = Map<String, String>.from(super.headers);
     if (cookie != null) superHeaders['cookie'] = cookie!;
     return superHeaders;
   }
